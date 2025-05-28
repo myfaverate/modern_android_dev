@@ -1,0 +1,42 @@
+package edu.tyut.helloktorfit.ui.activity
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import dagger.hilt.android.AndroidEntryPoint
+import edu.tyut.helloktorfit.ui.screen.NavScreen
+import edu.tyut.helloktorfit.ui.theme.HelloKtorfitTheme
+
+@AndroidEntryPoint
+internal class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            HelloKtorfitTheme {
+                val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
+                Scaffold(
+                    modifier = Modifier.Companion.fillMaxSize(),
+                    snackbarHost = {
+                        SnackbarHost(hostState = snackBarHostState)
+                    }
+                )
+                { innerPadding: PaddingValues ->
+                    NavScreen(
+                        modifier = Modifier.Companion.padding(paddingValues = innerPadding),
+                        snackBarHostState = snackBarHostState,
+                    )
+                }
+            }
+        }
+    }
+}
