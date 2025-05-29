@@ -3,6 +3,7 @@ package edu.tyut.helloktorfit.viewmodel
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.tyut.helloktorfit.data.bean.Person
+import edu.tyut.helloktorfit.data.bean.User
 import edu.tyut.helloktorfit.data.remote.repository.HelloRepository
 import jakarta.inject.Inject
 
@@ -15,5 +16,11 @@ internal class HelloViewModel @Inject internal constructor(
     }
     internal suspend fun getPerson(person: Person): Person {
         return helloRepository.getPerson(person = person)
+    }
+    internal suspend fun getUsers(): List<User> {
+        return helloRepository.getUsers()
+    }
+    internal suspend fun getUser(id: Int): User {
+        return helloRepository.getUser(id = id)
     }
 }
