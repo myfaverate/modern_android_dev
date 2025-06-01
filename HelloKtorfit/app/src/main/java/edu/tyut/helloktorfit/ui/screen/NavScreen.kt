@@ -3,16 +3,20 @@ package edu.tyut.helloktorfit.ui.screen
 import android.util.Log
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
-import edu.tyut.helloktorfit.route.Routes
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.toRoute
+import edu.tyut.helloktorfit.data.bean.Photo
+import edu.tyut.helloktorfit.route.Routes
+import edu.tyut.helloktorfit.route.photoNavType
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 private const val TAG: String = "NavScreen"
 
@@ -29,6 +33,19 @@ internal fun NavScreen(
     ) {
         composable<Routes.Greeting> {
             Greeting(
+                navHostController = navHostController,
+                snackBarHostState = snackBarHostState
+            )
+        }
+        composable<Routes.PhotoScreen>(
+            typeMap = mapOf<KType, NavType<Photo>>(
+                typeOf<Photo>() to photoNavType
+            )
+        ) { navBackStackEntry: NavBackStackEntry ->
+            val photoScreen: Routes.PhotoScreen = navBackStackEntry.toRoute<Routes.PhotoScreen>()
+            Log.i(TAG, "NavScreen -> photoScreen: $photoScreen")
+            PictureScreen(
+                photo = photoScreen.photo,
                 navHostController = navHostController,
                 snackBarHostState = snackBarHostState
             )

@@ -8,7 +8,9 @@ import dagger.hilt.components.SingletonComponent
 import de.jensklingenberg.ktorfit.Ktorfit
 import de.jensklingenberg.ktorfit.ktorfit
 import edu.tyut.helloktorfit.data.remote.service.HelloService
+import edu.tyut.helloktorfit.data.remote.service.PhotoService
 import edu.tyut.helloktorfit.data.remote.service.createHelloService
+import edu.tyut.helloktorfit.data.remote.service.createPhotoService
 import edu.tyut.helloktorfit.utils.Constants
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -37,6 +39,11 @@ internal class KtorFitModule {
     @Singleton
     internal fun providerHelloService(ktorfit: Ktorfit): HelloService =
         ktorfit.createHelloService()
+
+    @Provides
+    @Singleton
+    internal fun providerPhotoService(ktorfit: Ktorfit): PhotoService =
+        ktorfit.createPhotoService()
 
     @Provides
     @Singleton

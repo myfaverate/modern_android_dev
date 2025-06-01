@@ -2,6 +2,7 @@ package edu.tyut.helloktorfit.data.remote.repository
 
 import dagger.hilt.android.scopes.ViewModelScoped
 import edu.tyut.helloktorfit.data.bean.Person
+import edu.tyut.helloktorfit.data.bean.Result
 import edu.tyut.helloktorfit.data.bean.User
 import edu.tyut.helloktorfit.data.remote.service.HelloService
 import jakarta.inject.Inject
@@ -12,6 +13,9 @@ internal class HelloRepository @Inject internal constructor(
 ) {
     internal suspend fun getHello(): String {
         return helloService.getHello()
+    }
+    internal suspend fun success(): Result<Boolean> {
+        return helloService.success()
     }
     internal suspend fun getPerson(person: Person): Person {
         return helloService.getPerson(person = person)

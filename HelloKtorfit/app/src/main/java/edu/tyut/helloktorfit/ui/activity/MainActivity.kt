@@ -25,14 +25,13 @@ internal class MainActivity : ComponentActivity() {
             HelloKtorfitTheme {
                 val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
                 Scaffold(
-                    modifier = Modifier.Companion.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     snackbarHost = {
                         SnackbarHost(hostState = snackBarHostState)
                     }
-                )
-                { innerPadding: PaddingValues ->
+                ) { innerPadding: PaddingValues ->
                     NavScreen(
-                        modifier = Modifier.Companion.padding(paddingValues = innerPadding),
+                        modifier = Modifier.padding(paddingValues = innerPadding),
                         snackBarHostState = snackBarHostState,
                     )
                 }

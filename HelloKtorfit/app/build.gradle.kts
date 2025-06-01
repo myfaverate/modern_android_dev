@@ -64,6 +64,15 @@ dependencies {
     implementation(libs.slf4j.android)
     // implementation(libs.ktor.serialization.kotlinx.protobuf)
 
+    // compose 相对布局
+    implementation(libs.constraintlayout.compose.android)
+
+    // coil3
+    implementation(libs.coil3)
+    implementation(libs.coil3.okhttp)
+
+    // paging3
+    implementation(libs.androidx.paging.compose)
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
