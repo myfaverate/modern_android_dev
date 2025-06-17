@@ -95,7 +95,7 @@ internal fun WebViewScreen(navHostController: NavHostController, url: String){
                         val hybridMap: Map<String, Hybrid> = HybridServiceManager.getHybrids()
                         val uri: Uri? = message?.toUri()
                         if(HYBRID_SCHEME == uri?.scheme) {
-                            val resultValue: String? = hybridMap[uri.authority]?.onAction(context = context, webView = webView, statusBarTopPadding = statusBarTopPadding, navHostController = navHostController, uri = uri)
+                            val resultValue: String? = hybridMap[uri.authority]?.onAction(context = context, webView = webView, navHostController = navHostController, uri = uri)
                             result?.confirm(resultValue)
                             return true
                         }
