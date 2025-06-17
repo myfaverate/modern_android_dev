@@ -74,7 +74,7 @@ internal fun WebViewScreen(navHostController: NavHostController, url: String){
                         super.onPageFinished(view, url)
                         val javaScript = "document.body.style.paddingTop='${statusBarTopPadding}px'"
                         webView.evaluateJavascript(javaScript) { value: String? ->
-                            Log.i(TAG, "onPageFinished -> value: String")
+                            Log.i(TAG, "onPageFinished -> value: $value")
                         }
                     }
                 }
