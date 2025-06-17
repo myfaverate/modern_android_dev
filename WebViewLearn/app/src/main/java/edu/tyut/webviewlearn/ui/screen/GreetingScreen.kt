@@ -19,11 +19,12 @@ private const val TAG: String = "Greeting"
 
 @Composable
 internal fun Greeting(
+    modifier: Modifier,
     snackBarHostState: SnackbarHostState,
     navHostController: NavHostController,
 ) {
     val coroutineScope: CoroutineScope = rememberCoroutineScope()
-    Text(text = TAG, Modifier.clickable {
+    Text(text = TAG, modifier.clickable {
         navHostController.navigate(route = Routes.WebView(url = "http://192.168.31.90:5500/hello.html"))
         coroutineScope.launch {
             snackBarHostState.showSnackbar("跳转成功")
@@ -38,6 +39,7 @@ private fun GreetingPreview() {
         val navHostController: NavHostController = rememberNavController()
         val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
         Greeting(
+            modifier = Modifier,
             navHostController = navHostController,
             snackBarHostState = snackBarHostState
         )

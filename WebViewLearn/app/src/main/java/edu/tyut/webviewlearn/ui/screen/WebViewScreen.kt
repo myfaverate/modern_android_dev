@@ -5,15 +5,22 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.view.ViewGroup
+import android.webkit.ConsoleMessage
 import android.webkit.JsPromptResult
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.navigation.NavHostController
@@ -21,6 +28,8 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.components.ActivityComponent
+import edu.tyut.webviewlearn.hybrid.Hybrid
+import edu.tyut.webviewlearn.spi.HybridServiceManager
 
 private const val TAG: String = "WebViewScreen"
 private const val HYBRID_SCHEME = "hybrid"
@@ -29,6 +38,10 @@ private const val HYBRID_SCHEME = "hybrid"
 internal fun WebViewScreen(navHostController: NavHostController, url: String){
 
     val activity: Activity = LocalActivity.current!!
+    val density: Density = LocalDensity.current
+    val statusBarTopPadding: Int = with(receiver = density){
+        WindowInsets.statusBars.getTop(density = this).toDp().value.toInt()
+    }
 
     val webView: WebView = remember {
         val webViewEntryPoint: WebViewEntryPoint = EntryPointAccessors.fromActivity(
@@ -56,7 +69,20 @@ internal fun WebViewScreen(navHostController: NavHostController, url: String){
             webView.apply{
                 Log.i(TAG, "WebViewScreen init ... ")
                 layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                webViewClient = object : WebViewClient() {
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        super.onPageFinished(view, url)
+                        val javaScript = "document.body.style.paddingTop='${statusBarTopPadding}px'"
+                        webView.evaluateJavascript(javaScript) { value: String? ->
+                            Log.i(TAG, "onPageFinished -> value: String")
+                        }
+                    }
+                }
                 webChromeClient = object : WebChromeClient() {
+                    override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                        Log.i(TAG, consoleMessage?.message().toString())
+                        return true
+                    }
                     override fun onJsPrompt(
                         view: WebView?,
                         url: String?,
@@ -66,11 +92,11 @@ internal fun WebViewScreen(navHostController: NavHostController, url: String){
                     ): Boolean {
                         // TODO something
                         Log.i(TAG, "onJsPrompt -> url: $url, message: $message, defaultValue: $defaultValue, result: ${result.toString()}")
-                        // val hybridMap: Map<String, Hybrid> = IHybridServiceManager.discoverAndUseUserServices()
+                        val hybridMap: Map<String, Hybrid> = HybridServiceManager.getHybrids()
                         val uri: Uri? = message?.toUri()
                         if(HYBRID_SCHEME == uri?.scheme) {
-                            // val resultValue: String? = hybridMap[uri.authority]?.onAction(uri = uri, context = context, navHostController = navHostController)
-                            // result?.confirm(resultValue)
+                            val resultValue: String? = hybridMap[uri.authority]?.onAction(context = context, webView = webView, statusBarTopPadding = statusBarTopPadding, navHostController = navHostController, uri = uri)
+                            result?.confirm(resultValue)
                             return true
                         }
                         return super.onJsPrompt(view, url, message, defaultValue, result)
