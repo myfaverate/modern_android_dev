@@ -41,6 +41,7 @@ internal fun NavScreen(
             Log.i(TAG, "NavScreen -> webView: $webView")
             WebViewScreen(
                 navHostController = navHostController,
+                snackBarHostState = snackBarHostState,
                 url = webView.url
             )
         }

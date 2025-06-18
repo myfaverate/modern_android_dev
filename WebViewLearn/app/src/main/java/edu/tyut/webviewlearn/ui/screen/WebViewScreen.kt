@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.ViewGroup
 import android.webkit.ConsoleMessage
 import android.webkit.JsPromptResult
-import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -16,8 +15,10 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -30,14 +31,20 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.components.ActivityComponent
 import edu.tyut.webviewlearn.hybrid.Hybrid
 import edu.tyut.webviewlearn.spi.HybridServiceManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 private const val TAG: String = "WebViewScreen"
 private const val HYBRID_SCHEME = "hybrid"
 
 @Composable
-internal fun WebViewScreen(navHostController: NavHostController, url: String){
+internal fun WebViewScreen(
+    snackBarHostState: SnackbarHostState,
+    navHostController: NavHostController, url: String
+){
 
     val activity: Activity = LocalActivity.current!!
+    val coroutineScope: CoroutineScope = rememberCoroutineScope()
     val density: Density = LocalDensity.current
     val statusBarTopPadding: Int = with(receiver = density){
         WindowInsets.statusBars.getTop(density = this).toDp().value.toInt()
@@ -95,8 +102,14 @@ internal fun WebViewScreen(navHostController: NavHostController, url: String){
                         val hybridMap: Map<String, Hybrid> = HybridServiceManager.getHybrids()
                         val uri: Uri? = message?.toUri()
                         if(HYBRID_SCHEME == uri?.scheme) {
-                            val resultValue: String? = hybridMap[uri.authority]?.onAction(context = context, webView = webView, navHostController = navHostController, uri = uri)
-                            result?.confirm(resultValue)
+                            coroutineScope.launch {
+                                try {
+                                    val resultValue: String? = hybridMap[uri.authority]?.onAction(context = context, webView = webView, navHostController = navHostController, snackBarHostState = snackBarHostState, uri = uri)
+                                    result?.confirm(resultValue)
+                                } catch (e: Exception){
+                                    result?.confirm(e.stackTraceToString())
+                                }
+                            }
                             return true
                         }
                         return super.onJsPrompt(view, url, message, defaultValue, result)
