@@ -2,11 +2,17 @@ package edu.tyut.webviewlearn.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,15 +31,29 @@ internal fun Greeting(
     snackBarHostState: SnackbarHostState,
     navHostController: NavHostController,
 ) {
+    var url: String by remember {
+        mutableStateOf(value = "")
+    }
     val coroutineScope: CoroutineScope = rememberCoroutineScope()
-    Text(text = TAG, modifier
-        .background(color = Color.Blue)
-        .clickable {
-        navHostController.navigate(route = Routes.WebView(url = "http://192.168.31.90:5500/index.html"))
-        coroutineScope.launch {
-            snackBarHostState.showSnackbar("跳转成功")
-        }
-    })
+    Column(
+        modifier = modifier
+    ){
+        TextField(
+            value = url,
+            onValueChange = { url = it },
+            placeholder = {
+                Text(text = "webViewUrl")
+            }
+        )
+        Text(text = TAG, Modifier
+            .background(color = Color.Blue)
+            .clickable {
+                navHostController.navigate(route = Routes.WebView(url = url))
+                coroutineScope.launch {
+                    snackBarHostState.showSnackbar("跳转成功")
+                }
+            })
+    }
 }
 
 @Preview(showBackground = true)

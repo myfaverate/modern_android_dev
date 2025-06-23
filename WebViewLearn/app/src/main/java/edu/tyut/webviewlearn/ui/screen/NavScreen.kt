@@ -1,7 +1,6 @@
 package edu.tyut.webviewlearn.ui.screen
 
 import android.util.Log
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -39,7 +38,7 @@ internal fun NavScreen(
         composable<Routes.WebView> { navBackStackEntry: NavBackStackEntry ->
             val webView: Routes.WebView = navBackStackEntry.toRoute<Routes.WebView>()
             Log.i(TAG, "NavScreen -> webView: $webView")
-            WebViewScreen(
+            WebViewPanel(
                 navHostController = navHostController,
                 snackBarHostState = snackBarHostState,
                 url = webView.url
