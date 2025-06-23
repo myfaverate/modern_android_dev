@@ -1,17 +1,22 @@
 package edu.tyut.webviewlearn.ui.screen
 
 import android.app.Activity
+import android.app.DownloadManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.view.ViewGroup
 import android.webkit.ConsoleMessage
+import android.webkit.DownloadListener
 import android.webkit.JsPromptResult
+import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
@@ -321,6 +326,36 @@ private fun WebViewScreen(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
+
+                setDownloadListener(object : DownloadListener{
+                    override fun onDownloadStart(
+                        url: String?,
+                        userAgent: String?,
+                        contentDisposition: String?,
+                        mimetype: String?,
+                        contentLength: Long
+                    ) {
+                        Log.i(TAG, "onDownloadStart -> url: $url, userAgent: $userAgent, contentDisposition: $contentDisposition, mimetype: $mimetype, contentLength: $contentLength")
+
+                        val uri: Uri? = url?.toUri()
+                        val request: DownloadManager.Request = DownloadManager.Request(uri)
+                        request.setTitle("文件下载")
+                        request.setDescription("正在下载文件")
+
+                        val fileName: String = URLUtil.guessFileName(url, contentDisposition, mimetype)
+                        Log.i(TAG, "onDownloadStart -> url: $url, userAgent: $userAgent, contentDisposition: $contentDisposition, mimetype: $mimetype, contentLength: $contentLength, fileName: $fileName")
+                        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+                        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                        val downloadManager: DownloadManager? = context.getSystemService<DownloadManager>(DownloadManager::class.java)
+                        downloadManager?.enqueue(request)
+
+                        // Toast.makeText(context, "", Toast.LENGTH_SHORT).show()
+                        coroutineScope.launch {
+                            snackBarHostState.showSnackbar("开始下载${fileName}文件")
+                        }
+                    }
+                })
+
                 webViewClient = object : WebViewClient() {
                     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                         super.onPageStarted(view, url, favicon)
