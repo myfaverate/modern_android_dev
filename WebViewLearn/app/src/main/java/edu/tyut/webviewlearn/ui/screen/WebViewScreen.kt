@@ -342,7 +342,7 @@ private fun WebViewScreen(
                         request.setTitle("文件下载")
                         request.setDescription("正在下载文件")
 
-                        val fileName: String = URLUtil.guessFileName(url, contentDisposition, mimetype)
+                        val fileName: String = URLUtil.guessFileName(url, contentDisposition, null)
                         Log.i(TAG, "onDownloadStart -> url: $url, userAgent: $userAgent, contentDisposition: $contentDisposition, mimetype: $mimetype, contentLength: $contentLength, fileName: $fileName")
                         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
                         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
