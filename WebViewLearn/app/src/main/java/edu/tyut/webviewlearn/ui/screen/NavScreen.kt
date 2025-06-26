@@ -35,6 +35,12 @@ internal fun NavScreen(
         composable<Routes.Hello>{
             HelloScreen(modifier = modifier)
         }
+        composable<Routes.Voice>{
+            VoiceScreen(modifier = modifier, snackBarHostState = snackBarHostState)
+        }
+        composable<Routes.TTS>{
+            TTSScreen(modifier = modifier, snackBarHostState = snackBarHostState)
+        }
         composable<Routes.WebView> { navBackStackEntry: NavBackStackEntry ->
             val webView: Routes.WebView = navBackStackEntry.toRoute<Routes.WebView>()
             Log.i(TAG, "NavScreen -> webView: $webView")
