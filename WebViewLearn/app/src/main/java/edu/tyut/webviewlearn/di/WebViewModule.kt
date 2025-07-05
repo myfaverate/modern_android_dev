@@ -18,7 +18,7 @@ internal class WebViewModule internal constructor(){
     @ActivityScoped
     @Provides
     internal fun providerWebView(@ActivityContext context: Context): WebView {
-        val webView = WebView(context)
+        val webView = WebView(context) // webView是有兼容性的, 没有webview内核会崩溃，例如 adb shell pm uninstall --user 0 com.android.webview
         // webSettings
         val webSettings: WebSettings = webView.settings
         // 混合模式

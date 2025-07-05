@@ -74,10 +74,10 @@ internal class VoiceManager internal constructor(
         AudioRecord.getMinBufferSize(sampleRate, channelMask, AudioFormat.ENCODING_PCM_16BIT)
 
     private val audioRecord: AudioRecord by lazy {
-        getAudioRecord()
+        getAudioRecordInner()
     }
 
-    private fun getAudioRecord(): AudioRecord {
+    private fun getAudioRecordInner(): AudioRecord {
         return if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.RECORD_AUDIO
