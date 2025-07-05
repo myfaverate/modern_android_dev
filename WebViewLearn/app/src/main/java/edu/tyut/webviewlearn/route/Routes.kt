@@ -17,6 +17,12 @@ internal sealed class Routes {
     @Serializable
     internal object TTS
 
+    @Serializable
+    internal object VideoCapture
+
+    @Serializable
+    internal object Stream
+
     @ConsistentCopyVisibility
     @Serializable
     internal data class WebView internal constructor(internal val url: String)

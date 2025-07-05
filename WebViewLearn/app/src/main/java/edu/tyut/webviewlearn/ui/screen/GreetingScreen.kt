@@ -26,6 +26,7 @@ import edu.tyut.webviewlearn.route.Routes
 import edu.tyut.webviewlearn.ui.theme.RoundedCornerShape10
 import edu.tyut.webviewlearn.ui.theme.RoundedCornerShape5
 import edu.tyut.webviewlearn.ui.theme.WebViewLearnTheme
+import edu.tyut.webviewlearn.utils.NativeUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -85,6 +86,47 @@ internal fun Greeting(
                     coroutineScope.launch {
                         snackBarHostState.showSnackbar("跳转成功")
                     }
+                },
+            color = Color.White
+        )
+        Text(
+            text = "录屏",
+            Modifier
+                .padding(top = 10.dp)
+                .background(color = Color.Black, shape = RoundedCornerShape10)
+                .padding(all = 5.dp)
+                .clickable {
+                    navHostController.navigate(route = Routes.VideoCapture)
+                    coroutineScope.launch {
+                        snackBarHostState.showSnackbar("跳转成功")
+                    }
+                },
+            color = Color.White
+        )
+
+        Text(
+            text = "Native",
+            Modifier
+                .padding(top = 10.dp)
+                .background(color = Color.Black, shape = RoundedCornerShape10)
+                .padding(all = 5.dp)
+                .clickable {
+                    coroutineScope.launch {
+                        snackBarHostState.showSnackbar(NativeUtils.stringFromJNI())
+                    }
+                },
+            color = Color.White
+        )
+
+
+        Text(
+            text = "Stream",
+            Modifier
+                .padding(top = 10.dp)
+                .background(color = Color.Black, shape = RoundedCornerShape10)
+                .padding(all = 5.dp)
+                .clickable {
+                    navHostController.navigate(route = Routes.Stream)
                 },
             color = Color.White
         )

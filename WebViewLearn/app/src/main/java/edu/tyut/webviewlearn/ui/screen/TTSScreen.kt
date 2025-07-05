@@ -12,6 +12,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,6 +52,11 @@ internal fun TTSScreen(
     }
     var text: String by remember {
         mutableStateOf(value = "")
+    }
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            tts.shutdown()
+        }
     }
     Column(
         modifier = modifier.fillMaxSize()

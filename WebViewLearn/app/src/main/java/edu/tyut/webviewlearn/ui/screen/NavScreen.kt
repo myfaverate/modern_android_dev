@@ -35,6 +35,12 @@ internal fun NavScreen(
         composable<Routes.Hello>{
             HelloScreen(modifier = modifier)
         }
+        composable<Routes.VideoCapture>{
+            VideoScreen(modifier = modifier, snackBarHostState = snackBarHostState)
+        }
+        composable<Routes.Stream>{
+            StreamScreen(modifier = modifier, snackBarHostState = snackBarHostState)
+        }
         composable<Routes.Voice>{
             VoiceScreen(modifier = modifier, snackBarHostState = snackBarHostState)
         }

@@ -6,6 +6,7 @@ import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
@@ -44,33 +45,45 @@ private const val TAG: String = "VoiceScreen"
 internal fun VoiceScreen(
     modifier: Modifier,
     snackBarHostState: SnackbarHostState
-){
+) {
     val context: Context = LocalContext.current
-    val audioManager: AudioManager = context.getSystemService<AudioManager>(AudioManager::class.java)
+    val audioManager: AudioManager =
+        context.getSystemService<AudioManager>(AudioManager::class.java)
     val coroutineScope: CoroutineScope = rememberCoroutineScope()
     val voiceManager: VoiceManager by remember {
-        mutableStateOf(value = VoiceManager())
+        mutableStateOf(value = VoiceManager(context))
     }
     var isStart: Boolean by remember {
-        val isRecording: Boolean = if (ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.RECORD_AUDIO
-            ) != PackageManager.PERMISSION_GRANTED
-        ) false else voiceManager.isRecording
-        mutableStateOf(value = isRecording)
+        mutableStateOf(value = voiceManager.isRecording)
     }
-    val launcher:  ManagedActivityResultLauncher<String, Boolean>
-        = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isSuccess: Boolean ->
-        coroutineScope.launch {
-            snackBarHostState.showSnackbar("获取权限${if (isSuccess) "成功" else "失败"}")
+    val permissions: Array<String> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            android.Manifest.permission.RECORD_AUDIO,
+            android.Manifest.permission.READ_MEDIA_AUDIO
+        )
+    } else {
+        arrayOf(
+            android.Manifest.permission.RECORD_AUDIO,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        )
+    }
+    val launcher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>> =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions()
+        ) { map: Map<String, Boolean> ->
+            val isSuccess: Boolean = map.any { it.value }
+            coroutineScope.launch {
+                snackBarHostState.showSnackbar("获取权限${if (isSuccess) "成功" else "失败"}")
+            }
         }
-    }
     val uri: Uri by lazy {
-        FileProvider.getUriForFile(context, "${context.packageName}.provider", File("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/hello.pcm").apply {
-            Log.i(TAG, "VoiceScreen -> path: $this")
-        })
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            File("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/hello.pcm").apply {
+                Log.i(TAG, "VoiceScreen -> path: $this")
+            })
     }
     DisposableEffect(key1 = Unit) {
         val audioDeviceCallback: AudioDeviceCallback = object : AudioDeviceCallback() {
@@ -80,10 +93,16 @@ internal fun VoiceScreen(
             }
 
             override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo?>?) {
-                Log.i(TAG, "onAudioDevicesRemoved -> removedDevices: ${removedDevices?.joinToString()}")
+                Log.i(
+                    TAG,
+                    "onAudioDevicesRemoved -> removedDevices: ${removedDevices?.joinToString()}"
+                )
             }
         }
-        audioManager.registerAudioDeviceCallback(audioDeviceCallback, Handler(Looper.getMainLooper()))
+        audioManager.registerAudioDeviceCallback(
+            audioDeviceCallback,
+            Handler(Looper.getMainLooper())
+        )
         onDispose {
             voiceManager.release()
             audioManager.unregisterAudioDeviceCallback(audioDeviceCallback)
@@ -91,28 +110,30 @@ internal fun VoiceScreen(
     }
     Column(
         modifier = modifier
-    ){
-        Text(text = if (isStart) "停止录音" else "开始录音", modifier = Modifier
-            .background(color = Color.Cyan, shape = RoundedCornerShape10)
-            .padding(all = 10.dp)
-            .clickable {
-                if (ContextCompat.checkSelfPermission(
-                        context,
-                        android.Manifest.permission.RECORD_AUDIO
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    launcher.launch(android.Manifest.permission.RECORD_AUDIO)
-                    return@clickable
-                }
-                if (isStart) {
-                    voiceManager.stopRecord()
-                } else {
-                    coroutineScope.launch {
-                        voiceManager.startRecord(context, uri)
+    ) {
+        Text(
+            text = if (isStart) "停止录音" else "开始录音", modifier = Modifier
+                .background(color = Color.Cyan, shape = RoundedCornerShape10)
+                .padding(all = 10.dp)
+                .clickable {
+                    if (permissions.any {
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                it
+                            ) != PackageManager.PERMISSION_GRANTED
+                        }) {
+                        launcher.launch(permissions)
+                        return@clickable
                     }
-                }
-                isStart = !isStart
-                Log.i(TAG, "VoiceScreen -> isRecording: ${voiceManager.isRecording}")
-            })
+                    if (isStart) {
+                        voiceManager.stopRecord()
+                    } else {
+                        coroutineScope.launch {
+                            voiceManager.startRecord(context, uri)
+                        }
+                    }
+                    isStart = !isStart
+                    Log.i(TAG, "VoiceScreen -> isRecording: ${voiceManager.isRecording}")
+                })
     }
 }

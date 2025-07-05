@@ -5,8 +5,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import edu.tyut.webviewlearn.BuildConfig
+import edu.tyut.webviewlearn.data.remote.service.HelloService
 import edu.tyut.webviewlearn.utils.Constants
-import jakarta.inject.Singleton
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -14,15 +14,16 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
 
 @Module
 @InstallIn(value = [SingletonComponent::class])
 internal class RetrofitModule internal constructor(){
 
-    // @Provides
-    // @Singleton
-    // internal fun providerHelloService(retrofit: Retrofit): HelloService =
-    //     retrofit.create(HelloService::class.java)
+    @Provides
+    @Singleton
+    internal fun providerHelloService(retrofit: Retrofit): HelloService =
+        retrofit.create(HelloService::class.java)
 
     @Provides
     @Singleton
