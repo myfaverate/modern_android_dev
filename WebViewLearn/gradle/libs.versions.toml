@@ -1,24 +1,39 @@
 [versions]
 agp = "8.10.1"
 cameraxVersion = "1.4.2"
+datastore = "1.1.7"
+hiltNavigationCompose = "1.3.0-alpha01"
 kotlin = "2.2.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 kotlinxSerializationJson = "1.9.0"
-lifecycleRuntimeKtx = "2.6.2"
+lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.0"
 composeBom = "2024.09.00"
-okhttp = "4.12.0"
+media3Exoplayer = "1.7.1"
+okhttp = "5.0.0"
 retrofitVersion = "3.0.0"
 # hilt 版本
 hiltVersion = "2.56.2"
 kspVersion = "2.2.0-2.0.2"
 navigationCompose = "2.9.0"
+roomVerion = "2.7.2"
 [libraries]
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraxVersion" }
 androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraxVersion" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraxVersion" }
+androidx-camera-video = { module = "androidx.camera:camera-video", version.ref = "cameraxVersion" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraxVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+androidx-lifecycle-service = { module = "androidx.lifecycle:lifecycle-service", version.ref = "lifecycleRuntimeKtx" }
+androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVerion" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomVerion" }
 converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofitVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

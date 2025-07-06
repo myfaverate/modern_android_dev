@@ -10,4 +10,6 @@ internal sealed class Routes {
     internal data class Hello(internal val name: String)
     @Serializable
     internal data class PhotoScreen(internal val photo: Photo)
+    @Serializable
+    internal object Provider
 }

@@ -1,10 +1,14 @@
 package edu.tyut.webviewlearn.ui.screen
 
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.Paint
+import android.media.MediaActionSound
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -21,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -37,6 +42,7 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import edu.tyut.webviewlearn.ui.theme.Purple40
 import edu.tyut.webviewlearn.ui.theme.RoundedCornerShape10
+import edu.tyut.webviewlearn.utils.broadcastAsFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.OutputStream
@@ -114,6 +120,39 @@ internal fun StoreScreen(
                                 val isSuccess: Boolean =
                                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
                                 Log.i(TAG, "StoreScreen -> isSuccess: $isSuccess")
+                            }
+                    }
+                },
+            color = Color.White
+        )
+        Text(
+            text = "查看图片",
+            Modifier
+                .padding(top = 10.dp)
+                .background(color = Color.Black, shape = RoundedCornerShape10)
+                .padding(all = 5.dp)
+                .clickable {
+                    context.contentResolver.query(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        arrayOf(MediaStore.Images.Media._ID),
+                        null,
+                        null,
+                        null
+                    )?.use { cursor: Cursor ->
+                        val idColumn: Int = cursor.getColumnIndex(MediaStore.Images.Media._ID)
+                        while (cursor.moveToNext()) {
+                            val id: Long = cursor.getLong(idColumn)
+                            val contentUri: Uri = ContentUris.withAppendedId(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                id
+                            )
+                            Log.i(TAG, "StoreScreen -> contentUri: $contentUri")
+                        }
+                    }
+                    coroutineScope.launch {
+                        context.broadcastAsFlow(Intent.ACTION_SCREEN_OFF, Intent.ACTION_SCREEN_ON)
+                            .collect { intent: Intent ->
+                                Log.i(TAG, "StoreScreen -> 屏幕关闭开启 intent: $intent")
                             }
                     }
                 },

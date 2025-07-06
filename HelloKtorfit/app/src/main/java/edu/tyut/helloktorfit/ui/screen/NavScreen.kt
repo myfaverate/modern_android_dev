@@ -29,7 +29,7 @@ internal fun NavScreen(
     NavHost(
         modifier = modifier,
         navController = navHostController,
-        startDestination = Routes.Greeting
+        startDestination = Routes.Provider
     ) {
         composable<Routes.Greeting> {
             Greeting(
@@ -54,6 +54,13 @@ internal fun NavScreen(
             val hello: Routes.Hello = navBackStackEntry.toRoute<Routes.Hello>()
             Log.i(TAG, "NavScreen -> hello: $hello")
             HelloScreen(
+            )
+        }
+        composable<Routes.Provider> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Provider...")
+            ProviderScreen(
+                modifier = Modifier,
+                snackBarHostState = snackBarHostState
             )
         }
     }

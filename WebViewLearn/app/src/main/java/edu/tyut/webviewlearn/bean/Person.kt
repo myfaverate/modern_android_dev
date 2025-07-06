@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class Person internal constructor(
     @PrimaryKey(autoGenerate = true)
-    internal val id: Int,
+    internal val id: Long,
     internal val name: String,
     internal val age: Int,
     internal val gender: String

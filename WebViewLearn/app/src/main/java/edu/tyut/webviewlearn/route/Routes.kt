@@ -29,4 +29,11 @@ internal sealed class Routes {
     @ConsistentCopyVisibility
     @Serializable
     internal data class WebView internal constructor(internal val url: String)
+
+    @Serializable
+    internal object Provider
+
+
+    @Serializable
+    internal object Service
 }

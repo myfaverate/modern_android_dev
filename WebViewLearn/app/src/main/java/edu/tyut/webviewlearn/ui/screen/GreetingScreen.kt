@@ -142,6 +142,29 @@ internal fun Greeting(
                 },
             color = Color.White
         )
+
+        Text(
+            text = "Provider",
+            Modifier
+                .padding(top = 10.dp)
+                .background(color = Color.Black, shape = RoundedCornerShape10)
+                .padding(all = 5.dp)
+                .clickable {
+                    navHostController.navigate(route = Routes.Provider)
+                },
+            color = Color.White
+        )
+        Text(
+            text = "Service",
+            Modifier
+                .padding(top = 10.dp)
+                .background(color = Color.Black, shape = RoundedCornerShape10)
+                .padding(all = 5.dp)
+                .clickable {
+                    navHostController.navigate(route = Routes.Service)
+                },
+            color = Color.White
+        )
     }
 }
 

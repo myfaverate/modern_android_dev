@@ -95,8 +95,8 @@ android {
 dependencies {
 
     // room
-    implementation("androidx.room:room-runtime:2.7.2")
-    ksp("androidx.room:room-compiler:2.7.2")
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
 
     // hilt 依赖
     implementation(libs.hilt.android)
@@ -121,20 +121,23 @@ dependencies {
 
     // camerax
     implementation(libs.androidx.camera.core)
-    implementation("androidx.camera:camera-video:1.4.2")
-    implementation("androidx.camera:camera-lifecycle:1.4.2")
-    implementation("androidx.camera:camera-camera2:1.4.2")
-    implementation("androidx.camera:camera-view:1.4.2")
+    implementation(libs.androidx.camera.video)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.view)
 
     // exoplayer
-    implementation("androidx.media3:media3-exoplayer:1.7.1")
+    implementation(libs.androidx.media3.exoplayer)
 
     // hiltViewModel
-    implementation("androidx.hilt:hilt-navigation-compose:1.3.0-alpha01")
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // dataStore
-    implementation("androidx.datastore:datastore-preferences:1.1.7")
-    implementation("androidx.datastore:datastore:1.1.7")
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore)
+
+    // lifecycle-service
+    implementation(libs.androidx.lifecycle.service)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

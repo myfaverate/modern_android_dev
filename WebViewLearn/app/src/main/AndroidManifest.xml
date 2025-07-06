@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+<permission android:name="edu.tyut.webviewlearn.permission.hello.WRITE"/>
+<permission android:name="edu.tyut.webviewlearn.permission.hello.READ"/>
+
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
@@ -54,6 +57,14 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        <provider
+            android:authorities="edu.tyut.webviewlearn.helloProvider"
+            android:name=".provider.HelloProvider"
+            android:exported="true"
+            android:writePermission="edu.tyut.webviewlearn.permission.hello.WRITE"
+            android:readPermission="edu.tyut.webviewlearn.permission.hello.READ"
+            />
+        <service android:name=".service.HelloService"/>
     </application>
 
 </manifest>

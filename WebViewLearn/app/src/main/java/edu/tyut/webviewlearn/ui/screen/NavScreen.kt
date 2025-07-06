@@ -59,5 +59,19 @@ internal fun NavScreen(
                 url = webView.url
             )
         }
+        composable<Routes.Provider> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Provider...")
+            ProviderScreen(
+                modifier = modifier,
+                snackBarHostState = snackBarHostState
+            )
+        }
+        composable<Routes.Service> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Service...")
+            ServiceScreen(
+                modifier = modifier,
+                snackBarHostState = snackBarHostState
+            )
+        }
     }
 }
