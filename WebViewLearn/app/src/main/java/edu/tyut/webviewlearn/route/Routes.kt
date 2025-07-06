@@ -23,6 +23,9 @@ internal sealed class Routes {
     @Serializable
     internal object Stream
 
+    @Serializable
+    internal object Store
+
     @ConsistentCopyVisibility
     @Serializable
     internal data class WebView internal constructor(internal val url: String)

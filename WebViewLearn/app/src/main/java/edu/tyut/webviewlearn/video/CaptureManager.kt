@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
@@ -26,23 +27,24 @@ import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
+import androidx.camera.view.PreviewView
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 
 private const val TAG: String = "CaptureManager"
 
 internal class CaptureManager(
-    private val context: Context
+    private val context: Context,
 ) {
 
     private var recording: Recording? = null
+    private val videoCapture: VideoCapture<Recorder>
 
-    internal val preview = Preview.Builder()
+    private val preview = Preview.Builder()
         .build()
 
-    @SuppressLint("CheckResult")
-    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-    internal fun start(lifecycleOwner: LifecycleOwner, videoName: String) {
+    init {
         val qualitySelector: QualitySelector = QualitySelector.fromOrderedList(
             listOf<Quality>(
                 Quality.UHD, Quality.FHD, // 4k 1080
@@ -54,23 +56,40 @@ internal class CaptureManager(
             .setExecutor(ContextCompat.getMainExecutor(context))
             .setQualitySelector(qualitySelector)
             .build()
-        // val videoCapture: VideoCapture<Recorder> = VideoCapture.withOutput<Recorder>(recorder)
-        val videoCapture: VideoCapture<Recorder> = VideoCapture.Builder<Recorder>(recorder)
+
+        videoCapture = VideoCapture.Builder<Recorder>(recorder)
             .setMirrorMode(MirrorMode.MIRROR_MODE_ON_FRONT_ONLY)
             .build()
+    }
+
+    internal fun initCamera(lifecycleOwner: LifecycleOwner, previewView: PreviewView){
         val cameraProvider: ProcessCameraProvider = ProcessCameraProvider.getInstance(context).get()
         cameraProvider.availableConcurrentCameraInfos.forEach { cameraInfos: List<CameraInfo> ->
             cameraInfos.forEach { cameraInfo: CameraInfo ->
                 Log.i(TAG, "init -> cameraInfos: $cameraInfo")
             }
         }
-
         val camera: Camera = cameraProvider.bindToLifecycle(
             lifecycleOwner = lifecycleOwner,
             cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
             useCases = arrayOf(preview, videoCapture),
         )
+        preview.surfaceProvider = previewView.surfaceProvider
         Log.i(TAG, "start -> camera: $camera")
+    }
+
+    internal fun start(videoName: String) {
+        if (recording != null) {
+            Log.i(TAG, "camerax is recording...")
+            return
+        }
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            throw IllegalArgumentException("Microphone permission required...")
+        }
         val contentValues: ContentValues = ContentValues().apply {
             put(MediaStore.Video.Media.DISPLAY_NAME, videoName)
         }
@@ -78,8 +97,8 @@ internal class CaptureManager(
             context.contentResolver,
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         )
-            .setContentValues(contentValues)
-            .build()
+        .setContentValues(contentValues)
+        .build()
         recording = videoCapture.output.prepareRecording(context, mediaStoreOutput)
             .withAudioEnabled()
             .start(ContextCompat.getMainExecutor(context)) { videoRecordEvent: VideoRecordEvent ->

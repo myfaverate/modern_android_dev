@@ -41,6 +41,9 @@ internal fun NavScreen(
         composable<Routes.Stream>{
             StreamScreen(modifier = modifier, snackBarHostState = snackBarHostState)
         }
+        composable<Routes.Store>{
+            StoreScreen(modifier = modifier, snackBarHostState = snackBarHostState)
+        }
         composable<Routes.Voice>{
             VoiceScreen(modifier = modifier, snackBarHostState = snackBarHostState)
         }

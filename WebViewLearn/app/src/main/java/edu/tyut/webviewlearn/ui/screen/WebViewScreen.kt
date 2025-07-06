@@ -304,10 +304,7 @@ private fun WebViewScreen(
 
     // 文件选择
     var fileCallback: ValueCallback<Array<out Uri?>?>? by remember {
-        mutableStateOf(value = object : ValueCallback<Array<out Uri?>?> {
-            override fun onReceiveValue(value: Array<out Uri?>?) {
-            }
-        })
+        mutableStateOf(value = ValueCallback<Array<out Uri?>?> { })
     }
     val launcher: ManagedActivityResultLauncher<String, List<@JvmSuppressWildcards Uri>>
             = rememberLauncherForActivityResult(
@@ -327,34 +324,35 @@ private fun WebViewScreen(
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
 
-                setDownloadListener(object : DownloadListener{
-                    override fun onDownloadStart(
-                        url: String?,
-                        userAgent: String?,
-                        contentDisposition: String?,
-                        mimetype: String?,
-                        contentLength: Long
-                    ) {
-                        Log.i(TAG, "onDownloadStart -> url: $url, userAgent: $userAgent, contentDisposition: $contentDisposition, mimetype: $mimetype, contentLength: $contentLength")
+                setDownloadListener { url: String?, userAgent: String?, contentDisposition: String?, mimetype: String?, contentLength: Long ->
+                    Log.i(
+                        TAG,
+                        "onDownloadStart -> url: $url, userAgent: $userAgent, contentDisposition: $contentDisposition, mimetype: $mimetype, contentLength: $contentLength"
+                    )
+                    val uri: Uri? = url?.toUri()
+                    val request: DownloadManager.Request = DownloadManager.Request(uri)
+                    request.setTitle("文件下载")
+                    request.setDescription("正在下载文件")
 
-                        val uri: Uri? = url?.toUri()
-                        val request: DownloadManager.Request = DownloadManager.Request(uri)
-                        request.setTitle("文件下载")
-                        request.setDescription("正在下载文件")
+                    val fileName: String = URLUtil.guessFileName(url, contentDisposition, null)
+                    Log.i(
+                        TAG,
+                        "onDownloadStart -> url: $url, userAgent: $userAgent, contentDisposition: $contentDisposition, mimetype: $mimetype, contentLength: $contentLength, fileName: $fileName"
+                    )
+                    request.setDestinationInExternalPublicDir(
+                        Environment.DIRECTORY_DOWNLOADS,
+                        fileName
+                    )
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    val downloadManager: DownloadManager? =
+                        context.getSystemService<DownloadManager>(DownloadManager::class.java)
+                    downloadManager?.enqueue(request)
 
-                        val fileName: String = URLUtil.guessFileName(url, contentDisposition, null)
-                        Log.i(TAG, "onDownloadStart -> url: $url, userAgent: $userAgent, contentDisposition: $contentDisposition, mimetype: $mimetype, contentLength: $contentLength, fileName: $fileName")
-                        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-                        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                        val downloadManager: DownloadManager? = context.getSystemService<DownloadManager>(DownloadManager::class.java)
-                        downloadManager?.enqueue(request)
-
-                        // Toast.makeText(context, "", Toast.LENGTH_SHORT).show()
-                        coroutineScope.launch {
-                            snackBarHostState.showSnackbar("开始下载${fileName}文件")
-                        }
+                    // Toast.makeText(context, "", Toast.LENGTH_SHORT).show()
+                    coroutineScope.launch {
+                        snackBarHostState.showSnackbar("开始下载${fileName}文件")
                     }
-                })
+                }
 
                 webViewClient = object : WebViewClient() {
                     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {

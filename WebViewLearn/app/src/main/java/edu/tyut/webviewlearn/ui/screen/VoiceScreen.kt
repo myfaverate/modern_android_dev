@@ -72,7 +72,7 @@ internal fun VoiceScreen(
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestMultiplePermissions()
         ) { map: Map<String, Boolean> ->
-            val isSuccess: Boolean = map.any { it.value }
+            val isSuccess: Boolean = map.all { it.value }
             coroutineScope.launch {
                 snackBarHostState.showSnackbar("获取权限${if (isSuccess) "成功" else "失败"}")
             }

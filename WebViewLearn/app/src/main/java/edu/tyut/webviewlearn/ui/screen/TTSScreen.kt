@@ -71,7 +71,10 @@ internal fun TTSScreen(
                 }
                 return@clickable
             }
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, bundleOf(), "utteranceId")
+            val result: Int = tts.speak(text, TextToSpeech.QUEUE_FLUSH, bundleOf(), "utteranceId")
+            coroutineScope.launch {
+                snackBarHostState.showSnackbar("朗读${if(result == TextToSpeech.SUCCESS) "成功" else "失败"}")
+            }
         })
         Text(text = "生成pcm", modifier = Modifier.clickable {
             if (text.isEmpty()) {
@@ -96,7 +99,7 @@ internal fun TTSScreen(
             val file =
                 File("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)}/hello1.wav")
             val result = tts.synthesizeToFile(
-                "",
+                text,
                 bundleOf(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID to "ttsOutput"),
                 file,
                 "ttsOutput"

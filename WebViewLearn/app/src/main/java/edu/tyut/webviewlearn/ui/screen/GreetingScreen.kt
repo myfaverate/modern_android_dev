@@ -130,6 +130,18 @@ internal fun Greeting(
                 },
             color = Color.White
         )
+
+        Text(
+            text = "Store",
+            Modifier
+                .padding(top = 10.dp)
+                .background(color = Color.Black, shape = RoundedCornerShape10)
+                .padding(all = 5.dp)
+                .clickable {
+                    navHostController.navigate(route = Routes.Store)
+                },
+            color = Color.White
+        )
     }
 }
 

@@ -10,6 +10,7 @@ import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.SurfaceRequest
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.SnackbarHostState
@@ -41,17 +42,18 @@ internal fun VideoScreen(
     val context: Context = LocalContext.current
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope: CoroutineScope = rememberCoroutineScope()
-    val captureManager by remember {
+    val captureManager: CaptureManager by remember {
         mutableStateOf(value = CaptureManager(context))
     }
     val permissions: Array<String> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         arrayOf(
             android.Manifest.permission.CAMERA,
             android.Manifest.permission.RECORD_AUDIO,
-            android.Manifest.permission.READ_MEDIA_AUDIO
+            android.Manifest.permission.READ_MEDIA_VIDEO
         )
     } else {
         arrayOf(
+            android.Manifest.permission.CAMERA,
             android.Manifest.permission.RECORD_AUDIO,
             android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
             android.Manifest.permission.READ_EXTERNAL_STORAGE
@@ -71,21 +73,12 @@ internal fun VideoScreen(
     ){
         AndroidView(
             factory = { viewContext: Context ->
-                SurfaceView(viewContext).apply {
+                PreviewView(viewContext).apply {
                     layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    captureManager.preview.setSurfaceProvider { request: SurfaceRequest ->
-                        val surface = holder.surface
-                        request.provideSurface(
-                            surface,
-                            ContextCompat.getMainExecutor(context)
-                        ) { result: SurfaceRequest.Result ->
-                            // 处理释放等
-                            Log.i(TAG, "setSurfaceProvider -> result: $result")
-                        }
-                    }
+                    captureManager.initCamera(lifecycleOwner = lifecycleOwner, previewView = this)
                 }
             },
-            update = { surfaceView: SurfaceView ->
+            update = { previewView: PreviewView ->
                 Log.i(TAG, "VideoScreen...")
             }
         )
@@ -93,11 +86,11 @@ internal fun VideoScreen(
             color = Color.White, modifier = Modifier
                 .align(Alignment.BottomStart)
                 .clickable {
-            if (permissions.any { ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED }){
+            if (permissions.any { ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED}){
                 launcher.launch(permissions)
                 return@clickable
             }
-            captureManager.start(lifecycleOwner = lifecycleOwner, videoName = "hello.mp4")
+            captureManager.start(videoName = "hello.mp4")
         })
         Text(text = "停止录像", color = Color.White, modifier = Modifier
             .align(Alignment.TopStart)
