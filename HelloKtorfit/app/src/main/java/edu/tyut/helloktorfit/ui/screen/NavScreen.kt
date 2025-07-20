@@ -10,7 +10,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import edu.tyut.helloktorfit.data.bean.Photo
 import edu.tyut.helloktorfit.route.Routes
@@ -29,7 +28,7 @@ internal fun NavScreen(
     NavHost(
         modifier = modifier,
         navController = navHostController,
-        startDestination = Routes.Provider
+        startDestination = Routes.Crop
     ) {
         composable<Routes.Greeting> {
             Greeting(
@@ -56,9 +55,22 @@ internal fun NavScreen(
             HelloScreen(
             )
         }
+        composable<Routes.Service> { _: NavBackStackEntry ->
+            ServiceScreen(
+                navHostController = navHostController,
+                snackBarHostState = snackBarHostState
+            )
+        }
         composable<Routes.Provider> { navBackStackEntry: NavBackStackEntry ->
             Log.i(TAG, "NavScreen -> Provider...")
             ProviderScreen(
+                modifier = Modifier,
+                snackBarHostState = snackBarHostState
+            )
+        }
+        composable<Routes.Crop> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Crop...")
+            CropScreen(
                 modifier = Modifier,
                 snackBarHostState = snackBarHostState
             )

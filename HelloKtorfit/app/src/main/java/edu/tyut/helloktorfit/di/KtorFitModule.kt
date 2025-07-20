@@ -16,6 +16,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.HttpTimeoutConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
@@ -61,18 +62,19 @@ internal class KtorFitModule {
                 })
             }
             install(plugin = HttpTimeout) {
-                connectTimeoutMillis = 3000L
-                requestTimeoutMillis = 3000L
-                socketTimeoutMillis = 3000L
+                connectTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
+                requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
+                socketTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
             }
             install(plugin = DefaultRequest) {
                 header(key = HttpHeaders.ContentType, value = ContentType.Application.Json)
                 header(key = HttpHeaders.Accept, value = ContentType.Application.Json)
             }
-            install(plugin = Logging){
-                logger = Logger.ANDROID
-                level = LogLevel.ALL
-            }
+            // 不支持流式数据
+            // install(plugin = Logging){
+            //     logger = Logger.ANDROID
+            //     level = LogLevel.ALL
+            // }
         }
     }
 

@@ -73,5 +73,12 @@ internal fun NavScreen(
                 snackBarHostState = snackBarHostState
             )
         }
+        composable<Routes.Notify> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Notify...")
+            NotifyScreen(
+                modifier = modifier,
+                snackBarHostState = snackBarHostState
+            )
+        }
     }
 }

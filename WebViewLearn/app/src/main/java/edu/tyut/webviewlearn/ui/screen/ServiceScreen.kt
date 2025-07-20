@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import edu.tyut.webviewlearn.service.HelloService
 import edu.tyut.webviewlearn.ui.theme.RoundedCornerShape10
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private const val TAG: String = "ProviderScreen"
 
@@ -65,11 +67,8 @@ internal fun ServiceScreen(
                 .padding(all = 5.dp)
                 .clickable {
                     // context.startService(Intent(context, HelloService::class.java))
-                    context.bindService(
-                        Intent(context, HelloService::class.java),
-                        connection,
-                        Context.BIND_AUTO_CREATE
-                    )
+                    HelloService.bindService(context, connection)
+                    HelloService.startService(context)
                     val message = helloBinder?.getHello()
                     Log.i(TAG, "ServiceScreen -> message: $message")
                 },

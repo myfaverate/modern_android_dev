@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.SnackbarHostState
@@ -43,7 +44,7 @@ internal fun Greeting(
     }
     val coroutineScope: CoroutineScope = rememberCoroutineScope()
     Column(
-        modifier = modifier
+        modifier = modifier.verticalScroll(state = rememberScrollState())
     ) {
         TextField(
             value = url,
@@ -162,6 +163,17 @@ internal fun Greeting(
                 .padding(all = 5.dp)
                 .clickable {
                     navHostController.navigate(route = Routes.Service)
+                },
+            color = Color.White
+        )
+        Text(
+            text = "Notify",
+            Modifier
+                .padding(top = 10.dp)
+                .background(color = Color.Black, shape = RoundedCornerShape10)
+                .padding(all = 5.dp)
+                .clickable {
+                    navHostController.navigate(route = Routes.Notify)
                 },
             color = Color.White
         )

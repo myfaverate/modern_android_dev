@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -35,8 +37,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_21.toString()
+    kotlin.compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
     }
     buildFeatures {
         compose = true
@@ -73,6 +75,14 @@ dependencies {
 
     // paging3
     implementation(libs.androidx.paging.compose)
+
+    // lifecycle-service
+    implementation(libs.androidx.lifecycle.service)
+
+    // https://mvnrepository.com/artifact/androidx.media3/media3-exoplayer
+    implementation("androidx.media3:media3-exoplayer:1.7.1")
+    // https://mvnrepository.com/artifact/androidx.media3/media3-session
+    implementation("androidx.media3:media3-session:1.7.1")
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)

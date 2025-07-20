@@ -4,9 +4,12 @@ import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.POST
 import de.jensklingenberg.ktorfit.http.Path
+import de.jensklingenberg.ktorfit.http.Query
+import de.jensklingenberg.ktorfit.http.Streaming
 import edu.tyut.helloktorfit.data.bean.Person
 import edu.tyut.helloktorfit.data.bean.Result
 import edu.tyut.helloktorfit.data.bean.User
+import io.ktor.client.statement.HttpStatement
 
 internal interface HelloService {
     @GET(value = "hello/hello")
@@ -19,4 +22,7 @@ internal interface HelloService {
     suspend fun getUsers(): List<User>
     @GET(value = "user/getUser/{id}")
     suspend fun getUser(@Path(value = "id") id: Int): User
+    @GET(value = "hello/download")
+    @Streaming
+    suspend fun download(@Query(value = "fileName") fileName: String): HttpStatement
 }

@@ -12,4 +12,8 @@ internal sealed class Routes {
     internal data class PhotoScreen(internal val photo: Photo)
     @Serializable
     internal object Provider
+    @Serializable
+    internal object Service
+    @Serializable
+    internal object Crop
 }

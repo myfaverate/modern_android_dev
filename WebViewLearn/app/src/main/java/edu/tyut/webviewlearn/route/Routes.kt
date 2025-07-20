@@ -36,4 +36,7 @@ internal sealed class Routes {
 
     @Serializable
     internal object Service
+
+    @Serializable
+    internal object Notify
 }

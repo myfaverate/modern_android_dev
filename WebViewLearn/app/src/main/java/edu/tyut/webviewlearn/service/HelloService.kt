@@ -1,6 +1,8 @@
 package edu.tyut.webviewlearn.service
 
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
@@ -10,6 +12,22 @@ import kotlin.random.Random
 private const val TAG: String = "HelloService"
 
 internal class HelloService internal constructor() : LifecycleService() {
+
+    companion object {
+        internal fun bindService(context: Context, connection: ServiceConnection){
+            val isSuccess: Boolean = context.bindService(Intent(context, HelloService::class.java), connection, Context.BIND_AUTO_CREATE)
+            Log.i(TAG, "bindService isSuccess: $isSuccess")
+        }
+        internal fun unbindService(context: Context, connection: ServiceConnection) {
+            context.unbindService(connection)
+        }
+        internal fun startService(context: Context) {
+            context.startService(Intent(context, HelloService::class.java))
+        }
+        internal fun stopService(context: Context) {
+            context.stopService(Intent(context, HelloService::class.java))
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -33,9 +51,10 @@ internal class HelloService internal constructor() : LifecycleService() {
         super.onRebind(intent)
     }
     override fun onUnbind(intent: Intent?): Boolean {
-        return super.onUnbind(intent).apply {
-            Log.i(TAG, "onUnbind -> intent: $intent value: $this")
-        }
+        return true
+        // return super.onUnbind(intent).apply {
+        //     Log.i(TAG, "onUnbind -> intent: $intent value: $this")
+        // }
     }
 
     override fun onDestroy() {
@@ -45,6 +64,7 @@ internal class HelloService internal constructor() : LifecycleService() {
 
     internal class HelloBinder : Binder() {
         internal fun getHello(): String {
+            Log.i(TAG, "getHello -> current: ${Thread.currentThread()}")
             return "Hello: ${Random.nextInt(until = 1000)}"
         }
     }

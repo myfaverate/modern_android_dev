@@ -26,6 +26,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.currentComposer
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.contentValuesOf
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import edu.tyut.webviewlearn.ui.theme.Purple40
@@ -56,6 +58,7 @@ internal fun StoreScreen(
     snackBarHostState: SnackbarHostState
 ) {
     val context: Context = LocalContext.current
+    val intents: Intent by context.broadcastAsFlow(Intent.ACTION_SCREEN_OFF, Intent.ACTION_SCREEN_ON).collectAsStateWithLifecycle(initialValue = Intent())
     val coroutineScope: CoroutineScope = rememberCoroutineScope()
     val imagePermissions: Array<String> =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
