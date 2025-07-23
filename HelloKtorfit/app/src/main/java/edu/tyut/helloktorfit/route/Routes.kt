@@ -16,4 +16,6 @@ internal sealed class Routes {
     internal object Service
     @Serializable
     internal object Crop
+    @Serializable
+    internal object Image
 }

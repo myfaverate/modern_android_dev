@@ -28,7 +28,7 @@ internal fun NavScreen(
     NavHost(
         modifier = modifier,
         navController = navHostController,
-        startDestination = Routes.Crop
+        startDestination = Routes.Hello(name = "Hello")
     ) {
         composable<Routes.Greeting> {
             Greeting(
@@ -53,6 +53,8 @@ internal fun NavScreen(
             val hello: Routes.Hello = navBackStackEntry.toRoute<Routes.Hello>()
             Log.i(TAG, "NavScreen -> hello: $hello")
             HelloScreen(
+                navHostController = navHostController,
+                snackBarHostState = snackBarHostState
             )
         }
         composable<Routes.Service> { _: NavBackStackEntry ->
@@ -72,6 +74,13 @@ internal fun NavScreen(
             Log.i(TAG, "NavScreen -> Crop...")
             CropScreen(
                 modifier = Modifier,
+                snackBarHostState = snackBarHostState
+            )
+        }
+        composable<Routes.Image> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Image...")
+            ImageScreen(
+                navHostController = navHostController,
                 snackBarHostState = snackBarHostState
             )
         }

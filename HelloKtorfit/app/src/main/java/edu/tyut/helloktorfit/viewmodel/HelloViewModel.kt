@@ -10,6 +10,7 @@ import edu.tyut.helloktorfit.data.bean.Result
 import edu.tyut.helloktorfit.data.bean.User
 import edu.tyut.helloktorfit.data.remote.repository.HelloRepository
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.HttpStatement
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.util.cio.use
 import io.ktor.utils.io.ByteReadChannel
@@ -47,5 +48,8 @@ internal class HelloViewModel @Inject internal constructor(
     }
     internal suspend fun download(context: Context, fileName: String, output: Uri): Long {
         return helloRepository.download(context = context, fileName = fileName, output = output)
+    }
+    internal suspend fun getImage(imageName: String): HttpStatement {
+        return helloRepository.getImage(imageName = imageName)
     }
 }

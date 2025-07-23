@@ -25,4 +25,7 @@ internal interface HelloService {
     @GET(value = "hello/download")
     @Streaming
     suspend fun download(@Query(value = "fileName") fileName: String): HttpStatement
+    @GET(value = "{imageName}")
+    @Streaming
+    suspend fun getImage(@Path(value = "imageName") imageName: String): HttpStatement
 }

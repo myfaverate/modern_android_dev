@@ -8,6 +8,7 @@ import edu.tyut.helloktorfit.data.bean.Result
 import edu.tyut.helloktorfit.data.bean.User
 import edu.tyut.helloktorfit.data.remote.service.HelloService
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.HttpStatement
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.contentLength
 import io.ktor.utils.io.ByteReadChannel
@@ -40,6 +41,10 @@ internal class HelloRepository @Inject internal constructor(
 
     internal suspend fun getUser(id: Int): User {
         return helloService.getUser(id = id)
+    }
+
+    internal suspend fun getImage(imageName: String): HttpStatement {
+        return helloService.getImage(imageName = imageName)
     }
 
     internal suspend fun download(context: Context, fileName: String, output: Uri, onProgress: (progress: Int) -> Unit = {}): Long = withContext(Dispatchers.IO) {
