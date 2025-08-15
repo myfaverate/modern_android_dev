@@ -72,6 +72,7 @@ dependencies {
     // coil3
     implementation(libs.coil3)
     implementation(libs.coil3.okhttp)
+    implementation(libs.coil3.svg)
 
     // paging3
     implementation(libs.androidx.paging.compose)
@@ -79,10 +80,9 @@ dependencies {
     // lifecycle-service
     implementation(libs.androidx.lifecycle.service)
 
-    // https://mvnrepository.com/artifact/androidx.media3/media3-exoplayer
-    implementation("androidx.media3:media3-exoplayer:1.7.1")
-    // https://mvnrepository.com/artifact/androidx.media3/media3-session
-    implementation("androidx.media3:media3-session:1.7.1")
+    // media3
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.session)
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.10.0"
+agp = "8.11.1"
 hiltNavigationCompose = "1.2.0"
 kotlin = "2.2.0"
 coreKtx = "1.15.0"
@@ -9,19 +9,20 @@ espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.0"
 composeBom = "2024.09.00"
+media3Version = "1.7.1"
 navigationCompose = "2.9.0"
 
 # ksp 插件版本
 kspVersion = "2.2.0-2.0.2"
 # hilt 版本
-hiltVersion = "2.56.2"
+hiltVersion = "2.57"
 # ktorfit 版本
-ktorfitVersion = "2.6.1"
+ktorfitVersion = "2.6.4"
 # Ktor 版本
-ktorVersion = "3.1.3"
+ktorVersion = "3.2.3"
 slf4jAndroid = "1.7.36"
 composeConstraintlayout = "1.1.1"
-coil3Version = "3.2.0"
+coil3Version = "3.3.0"
 pagingCompose = "3.3.6"
 
 [libraries]
@@ -52,6 +53,8 @@ ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serializatio
 ktor-serialization-kotlinx-protobuf = { group = "io.ktor", name = "ktor-serialization-kotlinx-protobuf", version.ref = "ktorVersion" }
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktorVersion" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorVersion" }
+media3-session = { module = "androidx.media3:media3-session", version.ref = "media3Version" }
+media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Version" }
 slf4j-android = { module = "org.slf4j:slf4j-android", version.ref = "slf4jAndroid" }
 
 # constraintlayout-compose
@@ -59,6 +62,7 @@ constraintlayout-compose-android = { module = "androidx.constraintlayout:constra
 # coil3
 coil3 = { module = "io.coil-kt.coil3:coil-compose-android", version.ref = "coil3Version" }
 coil3-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil3Version" }
+coil3-svg = { module = "io.coil-kt.coil3:coil-svg-android", version.ref = "coil3Version" }
 
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
 androidx-lifecycle-service = { module = "androidx.lifecycle:lifecycle-service", version.ref = "lifecycleRuntimeKtx" }

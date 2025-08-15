@@ -14,12 +14,15 @@
     </queries>
 
 
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="edu.tyut.webviewlearn.permission.hello.READ" />
     <uses-permission android:name="edu.tyut.webviewlearn.permission.hello.WRITE" />
     <uses-permission android:name="edu.tyut.webviewlearn.helloService" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <!-- . -->
@@ -69,6 +72,7 @@
         </service>
         <service android:name=".service.DownloadService"
             android:foregroundServiceType="dataSync"/>
+        <service android:name=".service.BinderService" android:process=":binder"/>
     </application>
 
 </manifest>

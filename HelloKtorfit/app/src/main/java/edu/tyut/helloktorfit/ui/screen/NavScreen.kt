@@ -28,7 +28,7 @@ internal fun NavScreen(
     NavHost(
         modifier = modifier,
         navController = navHostController,
-        startDestination = Routes.Hello(name = "Hello")
+        startDestination = Routes.MediaCodec
     ) {
         composable<Routes.Greeting> {
             Greeting(
@@ -80,6 +80,45 @@ internal fun NavScreen(
         composable<Routes.Image> { navBackStackEntry: NavBackStackEntry ->
             Log.i(TAG, "NavScreen -> Image...")
             ImageScreen(
+                navHostController = navHostController,
+                snackBarHostState = snackBarHostState
+            )
+        }
+
+        composable<Routes.Gif> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Gif...")
+            GifScreen(
+                navHostController = navHostController,
+                snackBarHostState = snackBarHostState
+            )
+        }
+
+        composable<Routes.Audio> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Audio...")
+            AudioScreen(
+                navHostController = navHostController,
+                snackBarHostState = snackBarHostState
+            )
+        }
+
+        composable<Routes.Binder> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Binder...")
+            BinderScreen(
+                navHostController = navHostController,
+                snackBarHostState = snackBarHostState
+            )
+        }
+
+        composable<Routes.System> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Binder...")
+            SystemScreen(
+                navHostController = navHostController,
+                snackBarHostState = snackBarHostState
+            )
+        }
+        composable<Routes.MediaCodec> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Binder...")
+            MediaCodecScreen(
                 navHostController = navHostController,
                 snackBarHostState = snackBarHostState
             )

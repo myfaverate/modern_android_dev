@@ -18,4 +18,14 @@ internal sealed class Routes {
     internal object Crop
     @Serializable
     internal object Image
+    @Serializable
+    internal object Gif
+    @Serializable
+    internal object Audio
+    @Serializable
+    internal object Binder
+    @Serializable
+    internal object System
+    @Serializable
+    internal object MediaCodec
 }
