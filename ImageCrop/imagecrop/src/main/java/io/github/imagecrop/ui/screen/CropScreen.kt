@@ -2,303 +2,461 @@ package io.github.imagecrop.ui.screen
 
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.res.Configuration
-import android.content.res.Resources
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.BitmapRegionDecoder
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
 import io.github.imagecrop.R
 import io.github.imagecrop.bean.CropArgs
+import io.github.imagecrop.ui.activity.CropActivity
 import io.github.imagecrop.ui.theme.ImageCropTheme
+import io.github.imagecrop.utils.Utils
 import java.io.InputStream
-import kotlin.math.roundToInt
+import java.io.OutputStream
+import kotlin.math.min
 
 private const val TAG: String = "CropScreen"
+private const val CROP_PADDING: Float = 10F
+
+private enum class Corner {
+    TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, MOVE, NONE
+}
 
 @Composable
 internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
-    // val activity: Activity? = LocalActivity.current
+
+    val activity: Activity? = LocalActivity.current
+    val density: Density = LocalDensity.current
     val context: Context = LocalContext.current
-    // val configuration: Configuration = LocalConfiguration.current
-    LaunchedEffect(key1 = Unit) {
-        Log.i(TAG, "CropScreen -> cropArgs: $cropArgs")
+    val configuration: Configuration = LocalConfiguration.current
+
+    /**
+     * ImageView 的大小
+     */
+    var imageSize: IntSize by remember {
+        mutableStateOf(
+            value = IntSize(
+                width = with(density) { configuration.screenWidthDp.dp.toPx() }.toInt(),
+                height = with(density) { configuration.screenHeightDp.dp.toPx() }.toInt()
+            )
+        )
     }
-    var offset: Offset by remember {
-        mutableStateOf(value = Offset.Zero)
+
+    /**
+     * 图片真实区域
+     */
+    var imageRect: Rect by remember {
+        mutableStateOf(value = Rect.Zero)
     }
-    Image(
-        bitmap = try {
-            // 图片等比压缩 -> 计算采样率
-            context.contentResolver.openInputStream(cropArgs.input).use { inputStream: InputStream? ->
-                BitmapFactory.decodeStream(inputStream).asImageBitmap()
+
+    /**
+     * 裁剪框区域
+     */
+    var rect: Rect by remember {
+        mutableStateOf(value = Rect.Zero)
+    }
+
+    /**
+     * 拖动裁剪框四角还是拖动裁剪框本身
+     */
+    var activeCorner: Corner by remember {
+        mutableStateOf(value = Corner.NONE)
+    }
+
+    /**
+     * 裁剪框 圆角大小
+     */
+    val radius: Float = with(receiver = density) { 10.dp.toPx() }
+
+    /**
+     * 默认占位图
+     */
+    val defaultImageBitmap: ImageBitmap by remember {
+        val vectorDrawable: Drawable? = ResourcesCompat.getDrawable(
+            context.resources,
+            R.drawable.error_placeholder,
+            null
+        )
+        val defaultImageBitmap: ImageBitmap = vectorDrawable?.toBitmap(
+            width = vectorDrawable.intrinsicWidth,
+            height = vectorDrawable.intrinsicHeight
+        )?.asImageBitmap() ?: 0xFFBB11AA.toInt().toDrawable().toBitmap(width = 100, height = 100).asImageBitmap()
+        mutableStateOf(value = defaultImageBitmap)
+    }
+
+    /**
+     * ffmpeg -y -i image1.jpg -vf scale=16200:16200 output.png 最大分辨率图片, 可惜Android不支持, 获取OpenGL纹理可以解决
+     * 加载的真实图片
+     */
+    val imageBitmap: ImageBitmap by produceState<ImageBitmap>(
+        initialValue = defaultImageBitmap
+    ) {
+        try {
+            val bitmap: Bitmap? = context.contentResolver.openInputStream(cropArgs.input)
+                ?.use { inputStream: InputStream ->
+                Log.i(TAG, "CropScreen -> before: ${imageSize.width}, height: ${imageSize.height}")
+                Utils.decodeSampledBitmapFromResource(
+                    inputStream,
+                    imageSize.width,
+                    imageSize.height
+                )
             }
+            value = bitmap?.asImageBitmap() ?: defaultImageBitmap
         } catch (e: Exception) {
-            Log.e(TAG, "CropScreen -> error: ${e.message}", e)
-            val vectorDrawable: Drawable? = ResourcesCompat.getDrawable(context.resources, R.drawable.error_placeholder, null)
-            val imageBitmap: ImageBitmap = vectorDrawable?.toBitmap(width = vectorDrawable.intrinsicWidth, height = vectorDrawable.intrinsicHeight)?.asImageBitmap() ?: 0xFFBB11AA.toInt().toDrawable().toBitmap(width = 100, height = 100).asImageBitmap()
-            imageBitmap
-        },
-        contentDescription = "裁剪图片结果",
-        modifier = Modifier.fillMaxSize()
-                .offset{
-                    IntOffset(x = offset.x.roundToInt(), y = offset.y.roundToInt())
+            Log.e(TAG, "Image load failed: ${e.message}", e)
+            value = defaultImageBitmap
+        }
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        Log.i(TAG, "CropScreen -> imageBitmapWidth: ${imageBitmap.width}, imageBitmapHeight: ${imageBitmap.height}, imageSize: $imageSize")
+        // 计算图片裁剪框的大小
+        val scale: Float = min(imageSize.width / imageBitmap.width.toFloat(), imageSize.height / imageBitmap.height.toFloat())
+        Log.i(
+            TAG,
+            "CropScreen -> scale: $scale imageBitmapWidth: ${imageBitmap.width}, imageBitmapHeight: ${imageBitmap.height}}"
+        )
+        val imageWidth: Float = imageBitmap.width * scale
+        val imageHeight: Float = imageBitmap.height * scale
+        val left: Float = (imageSize.width - imageWidth) / 2F // 居中
+        val top: Float = (imageSize.height - imageHeight) / 2F
+        val right: Float = left + imageWidth
+        val bottom: Float = top + imageHeight
+        imageRect = Rect(Offset(left, top), Offset(right, bottom))
+        // val cropPadding: Float = with(density) { CROP_PADDING.dp.toPx() }
+        // rect = rect.copy(
+        //     left + cropPadding,
+        //     top + cropPadding,
+        //     right - cropPadding,
+        //     bottom - cropPadding
+        // )
+        rect = imageRect
+    }
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Image(
+            bitmap = imageBitmap,
+            contentDescription = "裁剪图片结果",
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color(0x69000000))
+                .onSizeChanged { size ->
+                    imageSize = size
                 }
-                .pointerInput(key1 = Unit){
-                    detectDragGestures { change: PointerInputChange, dragAmount: Offset ->
-                        change.consume()
-                        offset += dragAmount
-                    }
-                }
-                .drawWithCache {
-                    val strokeWidth: Float = 5.dp.toPx()
-                    val dashLengthPx: Float = 5.dp.toPx()
-                    val gapLengthPx: Float = 4.dp.toPx()
-                    onDrawBehind {
-                        val path: Path = Path().apply {
-                            addRect(
-                                Rect(offset = Offset.Zero, size = size)
+        )
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(key1 = Unit) {
+                    detectDragGestures(
+                        onDragStart = { offset: Offset ->
+                            activeCorner = when {
+                                // 触控点到圆点的距离小于直径
+                                (offset - Offset(
+                                    rect.left,
+                                    rect.top
+                                )).getDistance() < radius * 2 -> Corner.TOP_LEFT
+
+                                (offset - Offset(
+                                    rect.right,
+                                    rect.top
+                                )).getDistance() < radius * 2 -> Corner.TOP_RIGHT
+
+                                (offset - Offset(
+                                    rect.left,
+                                    rect.bottom
+                                )).getDistance() < radius * 2 -> Corner.BOTTOM_LEFT
+
+                                (offset - Offset(
+                                    rect.right,
+                                    rect.bottom
+                                )).getDistance() < radius * 2 -> Corner.BOTTOM_RIGHT
+
+                                rect.contains(offset) -> Corner.MOVE
+                                else -> Corner.NONE
+                            }
+                        },
+                        onDragEnd = { activeCorner = Corner.NONE },
+                        onDragCancel = { activeCorner = Corner.NONE },
+                        onDrag = { pointerInputChange: PointerInputChange, offset: Offset ->
+                            pointerInputChange.consume()
+                            val cropLeft: Float = imageRect.left
+                            val cropTop: Float = imageRect.top
+                            val cropRight: Float = imageRect.right
+                            val cropBottom: Float = imageRect.bottom
+                            val minCropWidth = 100F
+                            rect = when (activeCorner) {
+                                Corner.TOP_LEFT -> {
+                                    // 优化
+                                    val left: Float =
+                                        (rect.left + offset.x).coerceIn(
+                                            cropLeft,
+                                            rect.right - minCropWidth
+                                        )
+                                    var top: Float =
+                                        (rect.top + offset.y).coerceIn(
+                                            cropTop,
+                                            rect.bottom - minCropWidth
+                                        )
+                                    // 固定比例
+                                    if (cropArgs.aspectRatio[0] != 0 || cropArgs.aspectRatio[1] != 0){
+                                        val ratio: Float =  cropArgs.aspectRatio[0] / cropArgs.aspectRatio[1].toFloat()
+                                        val width: Float = rect.right - left
+                                        val height: Float = width / ratio
+                                        top = rect.bottom - height
+                                    }
+                                    rect.copy(
+                                        left = left,
+                                        top = top
+                                    )
+                                }
+
+                                Corner.TOP_RIGHT -> {
+                                    // 优化
+                                    val right: Float =
+                                        (rect.right + offset.x).coerceIn(
+                                            rect.left + minCropWidth,
+                                            cropRight
+                                        )
+                                    var top: Float =
+                                        (rect.top + offset.y).coerceIn(
+                                            cropTop,
+                                            rect.bottom - minCropWidth
+                                        )
+                                    // 固定比例
+                                    if (cropArgs.aspectRatio[0] != 0 || cropArgs.aspectRatio[1] != 0){
+                                        val ratio: Float =  cropArgs.aspectRatio[0] / cropArgs.aspectRatio[1].toFloat()
+                                        val width = right - rect.left
+                                        val height = width / ratio
+                                        top = rect.bottom - height
+                                    }
+                                    rect.copy(
+                                        right = right,
+                                        top = top
+                                    )
+                                }
+
+                                Corner.BOTTOM_LEFT -> {
+                                    val left: Float =
+                                        (rect.left + offset.x).coerceIn(
+                                            cropLeft,
+                                            rect.right - minCropWidth
+                                        )
+                                    var bottom: Float =
+                                        (rect.bottom + offset.y).coerceIn(
+                                            rect.top + minCropWidth,
+                                            cropBottom
+                                        )
+                                    // 固定比例
+                                    if (cropArgs.aspectRatio[0] != 0 || cropArgs.aspectRatio[1] != 0){
+                                        val ratio: Float =  cropArgs.aspectRatio[0] / cropArgs.aspectRatio[1].toFloat()
+                                        val width = rect.right - left
+                                        val height = width / ratio
+                                        bottom = rect.top + height
+                                    }
+                                    rect.copy(
+                                        left = left,
+                                        bottom = bottom
+                                    )
+                                }
+
+                                Corner.BOTTOM_RIGHT -> {
+                                    val right: Float =
+                                        (rect.right + offset.x).coerceIn(
+                                            rect.left + minCropWidth,
+                                            cropRight
+                                        )
+                                    var bottom: Float =
+                                        (rect.bottom + offset.y).coerceIn(
+                                            rect.top + minCropWidth,
+                                            cropBottom
+                                        )
+                                    // 固定比例
+                                    if (cropArgs.aspectRatio[0] != 0 || cropArgs.aspectRatio[1] != 0){
+                                        val ratio: Float =  cropArgs.aspectRatio[0] / cropArgs.aspectRatio[1].toFloat()
+                                        val width = right - rect.left
+                                        val height = width / ratio
+                                        bottom = rect.top + height
+                                    }
+                                    rect.copy(
+                                        right = right,
+                                        bottom = bottom
+                                    )
+                                }
+
+                                Corner.MOVE -> {
+                                    val moved: Rect = rect.translate(offset)
+                                    val dx: Float = when {
+                                        moved.left < cropLeft -> cropLeft - rect.left
+                                        moved.right > cropRight -> cropRight - rect.right
+                                        else -> offset.x
+                                    }
+                                    val dy: Float = when {
+                                        moved.top < cropTop -> cropTop - rect.top
+                                        moved.bottom > cropBottom -> cropBottom - rect.bottom
+                                        else -> offset.y
+                                    }
+                                    rect.translate(offset = offset.copy(dx, dy))
+                                }
+
+                                Corner.NONE -> rect
+                            }
+                            Log.i(
+                                TAG,
+                                "CropScreen -> rect: $rect, width: ${rect.width}, height: ${rect.height}"
                             )
+                        },
+                    )
+                }
+        ) {
+            val cropBorderWidth: Float = with(density) { 1.5F.dp.toPx() }
+            val lineWidth: Float = with(density) { 0.5F.dp.toPx() }
+            // 裁剪框四个圆角
+            drawCircle(Color.White, center = Offset(x = rect.left, rect.top), radius = radius)
+            drawCircle(Color.White, center = Offset(x = rect.right, rect.top), radius = radius)
+            drawCircle(Color.White, center = Offset(x = rect.left, rect.bottom), radius = radius)
+            drawCircle(Color.White, center = Offset(x = rect.right, rect.bottom), radius = radius)
+            // 裁剪框
+            drawRect(
+                color = Color.White,
+                topLeft = Offset(x = rect.left, y = rect.top),
+                size = Size(width = rect.width, height = rect.height),
+                style = Stroke(width = cropBorderWidth)
+            )
+            // 九宫格
+            // 两横、两束
+            for (i in 1 .. 2){
+                drawLine(color = Color.White, start = Offset(x = rect.left, rect.top + i * rect.height / 3F), end = Offset(x = rect.right, y = rect.top + i * rect.height / 3F), strokeWidth = lineWidth)
+            }
+            for (i in 1 .. 2){
+                drawLine(color = Color.White, start = Offset(x = rect.left + i * rect.width / 3, rect.top), end = Offset(x = rect.left + i * rect.width / 3, y = rect.bottom), strokeWidth = lineWidth)
+            }
+        }
+        Icon(
+            imageVector = Icons.Filled.Clear,
+            contentDescription = "退出",
+            modifier = Modifier
+                .align(alignment = Alignment.BottomStart)
+                .padding(19.dp)
+                .clickable {
+                    Log.i(TAG, "CropScreen -> 退出")
+                    activity?.setResult(Activity.RESULT_CANCELED)
+                    activity?.finish()
+                },
+            tint = Color.White
+        )
+        Icon(
+            imageVector = Icons.Filled.Done,
+            contentDescription = "确定",
+            modifier = Modifier
+                .align(alignment = Alignment.BottomEnd)
+                .padding(19.dp)
+                .clickable {
+                    Log.i(TAG, "CropScreen -> 确定")
+
+                    val options: BitmapFactory.Options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    context.contentResolver.openInputStream(cropArgs.input).use {
+                        BitmapFactory.decodeStream(it, null, options)
+                    }
+
+                    val inputWidth: Int = options.outWidth
+                    val inputHeight: Int = options.outHeight
+
+                    // 计算裁剪区域（从屏幕映射到原图）
+                    val scaleX: Float = inputWidth / imageRect.width
+                    val scaleY: Float = inputHeight / imageRect.height
+
+                    val cropLeft: Int = ((rect.left - imageRect.left) * scaleX).toInt()
+                    val cropTop: Int = ((rect.top - imageRect.top) * scaleY).toInt()
+                    val cropRight: Int = ((rect.right - imageRect.left) * scaleX).toInt()
+                    val cropBottom: Int = ((rect.bottom - imageRect.top) * scaleY).toInt()
+                    val cropRect = android.graphics.Rect(cropLeft, cropTop, cropRight, cropBottom)
+
+                    context.contentResolver.openInputStream(cropArgs.input)?.use { inputStream: InputStream ->
+                        context.contentResolver.openOutputStream(cropArgs.output)?.use { outputStream: OutputStream ->
+                            val decoder: BitmapRegionDecoder? =
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    BitmapRegionDecoder.newInstance(inputStream)
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    BitmapRegionDecoder.newInstance(inputStream, false)
+                                }
+                            val options: BitmapFactory.Options = BitmapFactory.Options().apply {
+                                inSampleSize = Utils.calculateInSampleSize(imageWidth = cropRect.width(), imageHeight = cropRect.height(), cropArgs.maxResultSize[0], cropArgs.maxResultSize[1])
+                            }
+                            val bitmap: Bitmap? = decoder?.decodeRegion(cropRect, options)
+                            val isSuccess: Boolean? = bitmap?.compress(
+                                Bitmap.CompressFormat.JPEG,
+                                100,
+                                outputStream
+                            )
+                            Log.i(TAG, "CropScreen -> 是否裁剪成功: $isSuccess")
+                            if (isSuccess == true){
+                                activity?.setResult(Activity.RESULT_OK)
+                            } else {
+                                activity?.setResult(CropActivity.CROP_FAILURE)
+                            }
+                            activity?.finish()
                         }
-                        drawPath(
-                            path = path,
-                            color = Color(0xFFE1E1E1),
-                            style = Stroke(
-                                width = strokeWidth,
-                                pathEffect = PathEffect.dashPathEffect(
-                                    intervals = floatArrayOf(dashLengthPx, gapLengthPx),
-                                    phase = 0F
-                                )
-                            )
-                        )
                     }
-                }
-    )
+                },
+            tint = Color.White
+        )
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun GreetingPreview() {
     ImageCropTheme {
-        CropScreen(cropArgs = CropArgs(input = Uri.EMPTY))
+        CropScreen(cropArgs = CropArgs(input = Uri.EMPTY, output = Uri.EMPTY))
     }
 }
-/*
-private fun decodeImageSafely(context: Context, uri: Uri): ImageBitmap? {
-    return try {
-        context.contentResolver.openInputStream(uri)?.use { inputStream ->
-            BitmapFactory.Options().run {
-                inJustDecodeBounds = true
-                BitmapFactory.decodeStream(inputStream, null, this)
-
-                // 计算合适的采样率
-                inSampleSize = calculateInSampleSize(this, reqWidth, reqHeight)
-                inJustDecodeBounds = false
-
-                // 重新打开流
-                context.contentResolver.openInputStream(uri)?.use {
-                    BitmapFactory.decodeStream(it, null, this)?.asImageBitmap()
-                }
-            }
-        }
-    } catch (e: Exception) {
-        Log.e(TAG, "Error decoding image", e)
-        null
-    }
-}
-
-private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
-    val (height: Int, width: Int) = options.run { outHeight to outWidth }
-    var inSampleSize = 1
-
-    if (height > reqHeight || width > reqWidth) {
-        val halfHeight: Int = height / 2
-        val halfWidth: Int = width / 2
-
-        while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
-            inSampleSize *= 2
-        }
-    }
-    return inSampleSize
-}
- */
-
-/*
-fun decodeSampledBitmap(resources: Resources, resId: Int, reqWidth: Int, reqHeight: Int): Bitmap {
-    val options = BitmapFactory.Options().apply {
-        inJustDecodeBounds = true
-        BitmapFactory.decodeResource(resources, resId, this)
-
-        inSampleSize = calculateInSampleSize(this, reqWidth, reqHeight)
-        inJustDecodeBounds = false
-    }
-
-    return BitmapFactory.decodeResource(resources, resId, options)
-}
-
-fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
-    val (height, width) = options.run { outHeight to outWidth }
-    var inSampleSize = 1
-
-    if (height > reqHeight || width > reqWidth) {
-        val halfHeight = height / 2
-        val halfWidth = width / 2
-
-        while (halfHeight / inSampleSize >= reqHeight &&
-               halfWidth / inSampleSize >= reqWidth) {
-            inSampleSize *= 2
-        }
-    }
-    return inSampleSize
-}
- */
-
-/*
-fun scaleBitmap(original: Bitmap, targetWidth: Int, targetHeight: Int): Bitmap {
-    val aspectRatio = original.width.toFloat() / original.height.toFloat()
-    val scaledWidth: Int
-    val scaledHeight: Int
-
-    if (targetWidth / aspectRatio <= targetHeight) {
-        scaledWidth = targetWidth
-        scaledHeight = (targetWidth / aspectRatio).toInt()
-    } else {
-        scaledWidth = (targetHeight * aspectRatio).toInt()
-        scaledHeight = targetHeight
-    }
-
-    return Bitmap.createScaledBitmap(original, scaledWidth, scaledHeight, true)
-}
- */
-
-/*
-@Composable
-internal fun CropScreen(
-    modifier: Modifier,
-    snackBarHostState: SnackbarHostState,
-    helloViewModel: HelloViewModel = hiltViewModel<HelloViewModel>(),
-    uri: Uri = "content://media/external/images/media/1000005861".toUri(),
-) {
-    val context: Context = LocalContext.current
-    val coroutineScope: CoroutineScope = rememberCoroutineScope()
-    // Box(
-    //     modifier = modifier.fillMaxSize()
-    // ) {
-    //     Image(
-    //         bitmap = context.contentResolver.openInputStream(uri)?.use { inputStream: InputStream ->
-    //             BitmapFactory.decodeStream(inputStream)
-    //         }!!.asImageBitmap(),
-    //         contentDescription = "图片裁剪",
-    //         modifier = Modifier.fillMaxSize().drawWithContent{
-    //             drawContent()
-    //             drawRect(
-    //                 color = Color.Cyan,
-    //                 topLeft = Offset(0F, 0F),
-    //                 size = Size(100F, 100F),
-    //                 style = Stroke(width = 2.dp.toPx())
-    //             )
-    //         }
-    //     )
-    // }
-
-    // var offset: Offset by remember {
-    //     mutableStateOf(value = Offset.Zero)
-    // }
-    //
-    // Column(
-    //     modifier = Modifier.fillMaxSize()
-    //         .offset{
-    //             IntOffset(x = offset.x.roundToInt(), y = offset.y.roundToInt())
-    //         }
-    //         .pointerInput(key1 = Unit){
-    //             detectDragGestures { change: PointerInputChange, dragAmount: Offset ->
-    //                 change.consume()
-    //                 offset += dragAmount
-    //             }
-    //         }
-    //         .drawWithCache {
-    //             val strokeWidth: Float = 5.dp.toPx()
-    //             val dashLengthPx: Float = 5.dp.toPx()
-    //             val gapLengthPx: Float = 4.dp.toPx()
-    //             onDrawBehind {
-    //                 val path: Path = Path().apply {
-    //                     addRect(
-    //                         Rect(offset = Offset.Zero, size = size)
-    //                     )
-    //                 }
-    //                 drawPath(
-    //                     path = path,
-    //                     color = Color(0xFFE1E1E1),
-    //                     style = Stroke(
-    //                         width = strokeWidth,
-    //                         pathEffect = PathEffect.dashPathEffect(
-    //                             intervals = floatArrayOf(dashLengthPx, gapLengthPx),
-    //                             phase = 0F
-    //                         )
-    //                     )
-    //                 )
-    //             }
-    //         }
-    // ){
-    //     Text(
-    //         text = "设置State",
-    //         Modifier
-    //             .padding(top = 10.dp)
-    //             .background(color = Color.Black, shape = RoundedCornerShape10)
-    //             .padding(all = 5.dp)
-    //             .clickable {
-    //                 helloViewModel.setSaveData(value = "zshh")
-    //             },
-    //         color = Color.White
-    //     )
-    //     Text(
-    //         text = "获取State",
-    //         Modifier
-    //             .padding(top = 10.dp)
-    //             .background(color = Color.Black, shape = RoundedCornerShape10)
-    //             .padding(all = 5.dp)
-    //             .clickable {
-    //                 coroutineScope.launch {
-    //                     snackBarHostState.showSnackbar("data: ${helloViewModel.getSaveData()}")
-    //                 }
-    //             },
-    //         color = Color.White
-    //     )
-    // }
- */

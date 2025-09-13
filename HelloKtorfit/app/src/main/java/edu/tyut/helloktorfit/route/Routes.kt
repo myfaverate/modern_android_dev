@@ -19,6 +19,8 @@ internal sealed class Routes {
     @Serializable
     internal object Image
     @Serializable
+    internal object Image1
+    @Serializable
     internal object Gif
     @Serializable
     internal object Audio

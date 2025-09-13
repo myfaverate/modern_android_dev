@@ -60,9 +60,8 @@ internal fun ImageScreen(
         initialValue = defaultBitmap
     ) {
         try {
-            val bitmap: Bitmap = helloViewModel.getImage(imageName = "bigImage.jpg")
+            val bitmap: Bitmap = helloViewModel.getImage(imageName = "image2.jpg")
                 .execute { httpResponse: HttpResponse ->
-                    httpResponse.headers.toString()
                     Log.i(
                         TAG,
                         "ImageScreen -> headers: ${httpResponse.headers.toMap()}, imageSize: $imageSize"

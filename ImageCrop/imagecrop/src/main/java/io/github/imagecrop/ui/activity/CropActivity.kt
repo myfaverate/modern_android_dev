@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,13 +17,19 @@ import io.github.imagecrop.bean.CropArgs
 import io.github.imagecrop.ui.screen.CropScreen
 import io.github.imagecrop.ui.theme.ImageCropTheme
 
+private const val TAG: String = "CropActivity"
 private const val CROP_ARGS_KEY: String = "cropArgsKey"
 
 class CropActivity internal constructor() : ComponentActivity() {
-     companion object {
-         fun getCropActivityIntent(context: Context, cropArgs: CropArgs): Intent {
-             return Intent(context, CropActivity::class.java)
-                 .putExtra(CROP_ARGS_KEY, cropArgs) // Parcelable
+
+    companion object {
+
+        const val CROP_FAILURE: Int = RESULT_FIRST_USER + 0
+
+        @JvmStatic
+        fun getCropActivityIntent(context: Context, cropArgs: CropArgs): Intent {
+            return Intent(context, CropActivity::class.java)
+                .putExtra(CROP_ARGS_KEY, cropArgs) // Parcelable
         }
     }
 
@@ -31,8 +38,22 @@ class CropActivity internal constructor() : ComponentActivity() {
         enableEdgeToEdge()
         // 获取 uri
         val cropArgs: CropArgs =
-            IntentCompat.getParcelableExtra<CropArgs>(intent, CROP_ARGS_KEY, CropArgs::class.java) ?: CropArgs(input = Uri.EMPTY)
-        setContent{
+            IntentCompat.getParcelableExtra<CropArgs>(intent, CROP_ARGS_KEY, CropArgs::class.java)
+                ?: CropArgs(input = Uri.EMPTY, output = Uri.EMPTY)
+        Log.i(TAG, "onCreate -> cropArgs: $cropArgs")
+        require(value = cropArgs.aspectRatio.size == 2){
+            "aspectRatio must have length 2"
+        }
+        require(value = cropArgs.aspectRatio.any { it >= 0 }){
+            "aspectRatio value must more then equals 0"
+        }
+        require(value = cropArgs.maxResultSize.size == 2){
+            "maxResultSize must have length 2"
+        }
+        require(value = cropArgs.maxResultSize.any { it >= 0 }){
+            "maxResultSize value must more then equals 0"
+        }
+        setContent {
             ImageCropTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     CropScreen(

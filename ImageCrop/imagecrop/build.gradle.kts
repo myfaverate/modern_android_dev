@@ -7,6 +7,9 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
+group = "io.github.imagecrop"
+version = "0.0.1"
+
 android {
     namespace = "io.github.imagecrop"
     compileSdk = 36
@@ -20,7 +23,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

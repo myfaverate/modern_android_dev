@@ -28,7 +28,7 @@ internal fun NavScreen(
     NavHost(
         modifier = modifier,
         navController = navHostController,
-        startDestination = Routes.MediaCodec
+        startDestination = Routes.Image
     ) {
         composable<Routes.Greeting> {
             Greeting(
@@ -80,6 +80,14 @@ internal fun NavScreen(
         composable<Routes.Image> { navBackStackEntry: NavBackStackEntry ->
             Log.i(TAG, "NavScreen -> Image...")
             ImageScreen(
+                navHostController = navHostController,
+                snackBarHostState = snackBarHostState
+            )
+        }
+
+        composable<Routes.Image1> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Image...")
+            ImageScreen1(
                 navHostController = navHostController,
                 snackBarHostState = snackBarHostState
             )

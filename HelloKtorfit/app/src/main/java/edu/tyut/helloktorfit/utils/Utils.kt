@@ -5,6 +5,11 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaCodec
+import android.media.MediaCodecInfo
+import android.media.MediaCodecList
+import android.media.MediaExtractor
+import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
@@ -14,10 +19,15 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.contentValuesOf
 import androidx.core.graphics.scale
+import edu.tyut.helloktorfit.ui.screen.SystemScreen
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.BufferedInputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.ByteBuffer
+import kotlin.coroutines.resume
 
 private const val TAG: String = "Utils"
 
@@ -52,6 +62,7 @@ internal object Utils {
         return BitmapFactory.decodeStream(bufferedInputStream, null,  options)!!
     }
 
+    @JvmStatic
     internal fun decodeSampledBitmapFromResource(
         inputStream: InputStream,
         reqWidth: Int,
@@ -74,9 +85,10 @@ internal object Utils {
 
             Log.i(TAG, "decodeSampledBitmap step1 -> imageType: ${outMimeType}, reqWidth: $reqWidth, reqHeight: $reqHeight, width: ${outWidth}, height: $outHeight")
             bufferedInputStream.reset()
+            val startTime: Long = System.currentTimeMillis()
             Log.i(TAG, "decodeSampledBitmap step2 -> imageType: ${outMimeType}, reqWidth: $reqWidth, reqHeight: $reqHeight, width: ${outWidth}, height: $outHeight")
             BitmapFactory.decodeStream(bufferedInputStream, null,  this)!!.apply {
-                Log.i(TAG, "decodeSampledBitmap step3 -> imageType: ${outMimeType}, reqWidth: $reqWidth, reqHeight: $reqHeight, width: ${outWidth}, height: $outHeight")
+                Log.i(TAG, "decodeSampledBitmap step3 -> imageType: ${outMimeType}, reqWidth: $reqWidth, reqHeight: $reqHeight, width: ${outWidth}, height: $outHeight, duration: ${(System.currentTimeMillis() - startTime) / 1000}s")
             }
         }
     }
@@ -207,6 +219,150 @@ internal object Utils {
             retriever.release()
         }
     }
+
+    internal suspend fun extractPcm(videoPath: String, pcmPath: String){
+        val mediaExtractor = MediaExtractor()
+        mediaExtractor.setDataSource(videoPath)
+        var audioTrackIndex = -1
+        for(i in 0 until mediaExtractor.trackCount){
+            val mediaFormat: MediaFormat = mediaExtractor.getTrackFormat(i)
+            Log.i(TAG, "extractPcm -> mediaFormat: $mediaFormat")
+            val mime: String? = mediaFormat.getString(MediaFormat.KEY_MIME)
+            if (mime?.startsWith("audio/") == true) {
+                audioTrackIndex = i
+                break
+            }
+        }
+        if (audioTrackIndex == -1){
+            Log.i(TAG, "extractPcm -> 无音轨...")
+            return
+        }
+        decode(mediaExtractor, audioTrackIndex, pcmPath)
+        mediaExtractor.release()
+    }
+    internal suspend fun decode(
+        mediaExtractor: MediaExtractor,
+        index: Int,
+        pcmPath: String,
+    ): Unit = suspendCancellableCoroutine { continuation ->
+
+        val mediaFormat: MediaFormat = mediaExtractor.getTrackFormat(index)
+        val mimeType: String = mediaFormat.getString(MediaFormat.KEY_MIME) ?: MediaFormat.MIMETYPE_AUDIO_AAC
+
+        val mediaCodecList = MediaCodecList(MediaCodecList.ALL_CODECS)
+        // 解码器
+        val decoders: List<MediaCodecInfo> = mediaCodecList.codecInfos.filter { !it.isEncoder }
+            .filter {
+                it.supportedTypes.contains(element = mimeType)
+            }
+
+        if (decoders.isEmpty()){
+            if (continuation.isActive){
+                continuation.resume(Unit)
+            }
+            Log.i(TAG, "decode -> 不支持aac解码")
+            return@suspendCancellableCoroutine
+        }
+
+        val decoder: MediaCodecInfo = decoders.firstOrNull {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                it.isHardwareAccelerated
+            } else {
+                true
+            }
+        } ?: decoders.first()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Log.i(TAG, "decode -> decoder isHardwareAccelerated: ${decoder.isHardwareAccelerated}")
+        }
+
+        val mediaCodec: MediaCodec = MediaCodec.createByCodecName(decoder.name)
+        mediaExtractor.selectTrack(index)
+        mediaCodec.configure(mediaFormat, null, null, 0) // 解码
+        val outputStream = FileOutputStream(pcmPath)
+        val bytes = ByteArray(1024 * 8)
+
+        mediaCodec.setCallback(object : MediaCodec.Callback() {
+            override fun onError(
+                codec: MediaCodec,
+                e: MediaCodec.CodecException
+            ) {
+                Log.e(
+                    TAG,
+                    "onError name: ${codec.name}, thread: ${Thread.currentThread()}, error: ${e.message}",
+                    e
+                )
+            }
+
+            override fun onInputBufferAvailable(
+                codec: MediaCodec,
+                index: Int
+            ) {
+                val inputBuffer: ByteBuffer = codec.getInputBuffer(index) ?: return
+                val size: Int = mediaExtractor.readSampleData(inputBuffer, 0)
+                // Log.i(
+                //     TAG,
+                //     "onInputBufferAvailable -> name: ${mediaCodec.name}, index: $index, thread: ${Thread.currentThread()}, size: $size"
+                // )
+                if (size > 0) {
+                    codec.queueInputBuffer(index, 0, size, mediaExtractor.sampleTime, mediaExtractor.sampleFlags)
+                    mediaExtractor.advance()
+                } else {
+                    codec.queueInputBuffer(
+                        index,
+                        0,
+                        0,
+                        0,
+                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                    )
+                }
+            }
+
+            override fun onOutputBufferAvailable(
+                codec: MediaCodec,
+                index: Int,
+                info: MediaCodec.BufferInfo
+            ) {
+                // Log.i(
+                //     TAG,
+                //     "onOutputBufferAvailable -> name: ${codec.name}, index: $index, infoSize: ${info.size}, thread: ${Thread.currentThread()}"
+                // )
+
+                val outputBuffer: ByteBuffer = codec.getOutputBuffer(index) ?: return
+
+                outputBuffer.get(bytes, 0, info.size)
+
+                outputStream.write(bytes, 0, info.size)
+
+                codec.releaseOutputBuffer(index, false)
+
+                if (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
+                    Log.i(TAG, "onOutputBufferAvailable -> == 编码结束...") // todo
+                    outputStream.close()
+                    mediaCodec.release()
+                    if (continuation.isActive) {
+                        Log.i(TAG, "pcmToAac -> 解码完成 resume before...")
+                        continuation.resume(Unit)
+                        Log.i(TAG, "pcmToAac -> 解码完成 resume after...")
+                    }
+                }
+            }
+
+            override fun onOutputFormatChanged(
+                codec: MediaCodec,
+                format: MediaFormat
+            ) {
+                Log.i(
+                    TAG,
+                    "onOutputFormatChanged -> name: ${codec.name}, format: $format"
+                )
+            }
+        })
+        Log.i(TAG, "pcmToAac -> before start...")
+        mediaCodec.start()
+        Log.i(TAG, "pcmToAac -> after start...")
+    }
+
 
 }
 /*
