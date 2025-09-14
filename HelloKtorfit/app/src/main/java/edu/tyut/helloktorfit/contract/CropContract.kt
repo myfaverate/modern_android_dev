@@ -11,6 +11,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.core.content.FileProvider
+import io.github.imagecrop.ui.activity.CropActivity
 import java.io.File
 
 private const val TAG: String = "CropContract"
@@ -30,7 +31,6 @@ internal class CropContract internal constructor(
         context: Context,
         input: Uri
     ): Intent {
-
         val intent = Intent("com.android.camera.action.CROP").setDataAndType(input, "image/*")
             .setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             .putExtra(MediaStore.EXTRA_OUTPUT, outputUri)

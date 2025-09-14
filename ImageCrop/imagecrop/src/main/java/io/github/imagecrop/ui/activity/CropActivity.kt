@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.Keep
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -20,12 +21,17 @@ import io.github.imagecrop.ui.theme.ImageCropTheme
 private const val TAG: String = "CropActivity"
 private const val CROP_ARGS_KEY: String = "cropArgsKey"
 
+@Keep
 class CropActivity internal constructor() : ComponentActivity() {
 
+    @Keep
     companion object {
 
         const val CROP_FAILURE: Int = RESULT_FIRST_USER + 0
 
+        /**
+         * Companion 类会被混淆，需要注意
+         */
         @JvmStatic
         fun getCropActivityIntent(context: Context, cropArgs: CropArgs): Intent {
             return Intent(context, CropActivity::class.java)

@@ -30,4 +30,6 @@ internal sealed class Routes {
     internal object System
     @Serializable
     internal object MediaCodec
+    @Serializable
+    internal object HelloCrop
 }

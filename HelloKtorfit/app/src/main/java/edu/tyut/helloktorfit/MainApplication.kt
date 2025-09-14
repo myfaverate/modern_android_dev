@@ -3,6 +3,7 @@ package edu.tyut.helloktorfit
 import android.app.Application
 import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
+import io.github.imagecrop.ui.activity.CropActivity
 
 private const val TAG: String = "MainApplication"
 

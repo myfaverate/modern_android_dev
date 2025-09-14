@@ -5,10 +5,33 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.parcelize)
+    `maven-publish`
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            register<MavenPublication>("gpr") {
+                from(components["release"])
+                logger.lifecycle("groupId: $group, artifactId: $artifactId, version: $version")
+            }
+        }
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri(path = "https://maven.pkg.github.com/myfaverate/modern_android_dev")
+                credentials {
+                    username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+                    password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+                    logger.lifecycle("user: ${project.findProperty("gpr.user")}, key: ${project.findProperty("gpr.key")}")
+                }
+            }
+        }
+    }
 }
 
 group = "io.github.imagecrop"
-version = "0.0.1"
+version = "0.0.4"
 
 android {
     namespace = "io.github.imagecrop"
@@ -39,6 +62,12 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    publishing {
+        singleVariant(variantName = "release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
     }
 }
 
