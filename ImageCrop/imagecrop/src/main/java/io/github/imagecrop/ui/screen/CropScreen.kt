@@ -81,10 +81,7 @@ internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
      */
     var imageSize: IntSize by remember {
         mutableStateOf(
-            value = IntSize(
-                width = with(density) { configuration.screenWidthDp.dp.toPx() }.toInt(),
-                height = with(density) { configuration.screenHeightDp.dp.toPx() }.toInt()
-            )
+            value = IntSize.Zero
         )
     }
 
@@ -176,7 +173,29 @@ internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
         //     right - cropPadding,
         //     bottom - cropPadding
         // )
-        rect = imageRect
+        if (cropArgs.aspectRatio[0] != 0 && cropArgs.aspectRatio[1] != 0){
+            val ratio: Float = cropArgs.aspectRatio[0] / cropArgs.aspectRatio[1].toFloat()
+
+            // 尝试用 imageRect 的宽来算裁剪框高度
+            var cropWidth: Float = imageWidth
+            var cropHeight: Float = cropWidth / ratio
+
+            // 如果高度超过了 imageRect，则用高度来算宽
+            if (cropHeight > imageHeight) {
+                cropHeight = imageHeight
+                cropWidth = cropHeight * ratio
+            }
+
+            // 居中
+            val left: Float = imageRect.left + (imageWidth - cropWidth) / 2f
+            val top: Float = imageRect.top + (imageHeight - cropHeight) / 2f
+            val right: Float = left + cropWidth
+            val bottom: Float = top + cropHeight
+
+            rect = Rect(left, top, right, bottom)
+        } else {
+            rect = imageRect
+        }
     }
     Box(
         modifier = modifier.fillMaxSize(),
@@ -228,15 +247,16 @@ internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
                         onDragCancel = { activeCorner = Corner.NONE },
                         onDrag = { pointerInputChange: PointerInputChange, offset: Offset ->
                             pointerInputChange.consume()
+                            val minCropWidth = 100F
                             val cropLeft: Float = imageRect.left
                             val cropTop: Float = imageRect.top
                             val cropRight: Float = imageRect.right
                             val cropBottom: Float = imageRect.bottom
-                            val minCropWidth = 100F
+                            val ratio: Float =  cropArgs.aspectRatio[0] / cropArgs.aspectRatio[1].toFloat()
                             rect = when (activeCorner) {
                                 Corner.TOP_LEFT -> {
                                     // 优化
-                                    val left: Float =
+                                    var left: Float =
                                         (rect.left + offset.x).coerceIn(
                                             cropLeft,
                                             rect.right - minCropWidth
@@ -247,11 +267,15 @@ internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
                                             rect.bottom - minCropWidth
                                         )
                                     // 固定比例
-                                    if (cropArgs.aspectRatio[0] != 0 || cropArgs.aspectRatio[1] != 0){
-                                        val ratio: Float =  cropArgs.aspectRatio[0] / cropArgs.aspectRatio[1].toFloat()
+                                    if (cropArgs.aspectRatio[0] != 0 && cropArgs.aspectRatio[1] != 0){
                                         val width: Float = rect.right - left
-                                        val height: Float = width / ratio
+                                        var height: Float = width / ratio
                                         top = rect.bottom - height
+                                        if (top < cropTop) {
+                                            top = cropTop
+                                            height = rect.bottom - top
+                                            left = rect.right - height * ratio
+                                        }
                                     }
                                     rect.copy(
                                         left = left,
@@ -261,7 +285,7 @@ internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
 
                                 Corner.TOP_RIGHT -> {
                                     // 优化
-                                    val right: Float =
+                                    var right: Float =
                                         (rect.right + offset.x).coerceIn(
                                             rect.left + minCropWidth,
                                             cropRight
@@ -272,11 +296,15 @@ internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
                                             rect.bottom - minCropWidth
                                         )
                                     // 固定比例
-                                    if (cropArgs.aspectRatio[0] != 0 || cropArgs.aspectRatio[1] != 0){
-                                        val ratio: Float =  cropArgs.aspectRatio[0] / cropArgs.aspectRatio[1].toFloat()
+                                    if (cropArgs.aspectRatio[0] != 0 && cropArgs.aspectRatio[1] != 0){
                                         val width = right - rect.left
-                                        val height = width / ratio
+                                        var height = width / ratio
                                         top = rect.bottom - height
+                                        if (top < cropTop) {
+                                            top = cropTop
+                                            height = rect.bottom - top
+                                            right = rect.left + height * ratio
+                                        }
                                     }
                                     rect.copy(
                                         right = right,
@@ -285,7 +313,7 @@ internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
                                 }
 
                                 Corner.BOTTOM_LEFT -> {
-                                    val left: Float =
+                                    var left: Float =
                                         (rect.left + offset.x).coerceIn(
                                             cropLeft,
                                             rect.right - minCropWidth
@@ -296,11 +324,15 @@ internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
                                             cropBottom
                                         )
                                     // 固定比例
-                                    if (cropArgs.aspectRatio[0] != 0 || cropArgs.aspectRatio[1] != 0){
-                                        val ratio: Float =  cropArgs.aspectRatio[0] / cropArgs.aspectRatio[1].toFloat()
+                                    if (cropArgs.aspectRatio[0] != 0 && cropArgs.aspectRatio[1] != 0){
                                         val width = rect.right - left
-                                        val height = width / ratio
+                                        var height = width / ratio
                                         bottom = rect.top + height
+                                        if (bottom > cropBottom) {
+                                            bottom = cropBottom
+                                            height = bottom - rect.top
+                                            left = rect.right - height * ratio
+                                        }
                                     }
                                     rect.copy(
                                         left = left,
@@ -309,7 +341,7 @@ internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
                                 }
 
                                 Corner.BOTTOM_RIGHT -> {
-                                    val right: Float =
+                                    var right: Float =
                                         (rect.right + offset.x).coerceIn(
                                             rect.left + minCropWidth,
                                             cropRight
@@ -320,11 +352,15 @@ internal fun CropScreen(cropArgs: CropArgs, modifier: Modifier = Modifier) {
                                             cropBottom
                                         )
                                     // 固定比例
-                                    if (cropArgs.aspectRatio[0] != 0 || cropArgs.aspectRatio[1] != 0){
-                                        val ratio: Float =  cropArgs.aspectRatio[0] / cropArgs.aspectRatio[1].toFloat()
+                                    if (cropArgs.aspectRatio[0] != 0 && cropArgs.aspectRatio[1] != 0){
                                         val width = right - rect.left
-                                        val height = width / ratio
+                                        var height = width / ratio
                                         bottom = rect.top + height
+                                        if (bottom > cropBottom) {
+                                            bottom = cropBottom
+                                            height = bottom - rect.top
+                                            right = rect.left + height * ratio
+                                        }
                                     }
                                     rect.copy(
                                         right = right,

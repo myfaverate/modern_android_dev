@@ -59,7 +59,7 @@ internal fun Greeting(modifier: Modifier = Modifier) {
         // 权限问题会空指针
         val output = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "result.jpg").toUri()
         Log.i(TAG, "Greeting -> output: $output")
-        launcher.launch(input = CropArgs(input = uri!!, output = output))
+        launcher.launch(input = CropArgs(input = uri!!, output = output, aspectRatio = intArrayOf(16, 9)))
     }
     /**
      * 默认占位图
