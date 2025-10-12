@@ -2,17 +2,21 @@ package io.github.customview.activity
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.os.Message
 import android.util.Log
 import android.view.View
+import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import io.github.customview.R
 import io.github.customview.databinding.ActivityMainBinding
 import kotlinx.coroutines.Runnable
@@ -65,16 +69,22 @@ internal class MainActivity internal constructor(): AppCompatActivity() {
     }
 
     private fun initView(){
+        WindowCompat.setDecorFitsSystemWindows(window, true)
+        val windowInsetsController: WindowInsetsControllerCompat =
+            WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
         Log.i(TAG, "initView -> name: ${intent?.getStringExtra("name")}")
-        binding.button.setOnClickListener {
-            Log.i(TAG, "initView...")
-            val message: Message = Message.obtain()
-            // val method = message.javaClass.getMethod("setCallback", Runnable::class.java)
-            // method.invoke(message, Runnable{
-            //     Log.i(TAG, "initView -> setCallback thread: ${Thread.currentThread()}")
-            // })
-            handler.sendMessage(message)
-            Log.i(TAG, "initView -> tail: ${Integer.numberOfTrailingZeros(0b0000_1000)}")
-        }
+    //     binding.button.setOnClickListener {
+    //         Log.i(TAG, "initView...")
+    //         val message: Message = Message.obtain()
+    //         // val method = message.javaClass.getMethod("setCallback", Runnable::class.java)
+    //         // method.invoke(message, Runnable{
+    //         //     Log.i(TAG, "initView -> setCallback thread: ${Thread.currentThread()}")
+    //         // })
+    //         handler.sendMessage(message)
+    //         Log.i(TAG, "initView -> tail: ${Integer.numberOfTrailingZeros(0b0000_1000)}")
+    //     }
     }
 }

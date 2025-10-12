@@ -28,7 +28,7 @@ internal fun NavScreen(
     NavHost(
         modifier = modifier,
         navController = navHostController,
-        startDestination = Routes.HelloCrop
+        startDestination = Routes.JNIScreen
     ) {
         composable<Routes.Greeting> {
             Greeting(
@@ -135,6 +135,13 @@ internal fun NavScreen(
         composable<Routes.HelloCrop> { navBackStackEntry: NavBackStackEntry ->
             Log.i(TAG, "NavScreen -> Binder...")
             HelloCropScreen(
+                navHostController = navHostController,
+                snackBarHostState = snackBarHostState
+            )
+        }
+        composable<Routes.JNIScreen> { navBackStackEntry: NavBackStackEntry ->
+            Log.i(TAG, "NavScreen -> Binder...")
+            JNIScreen(
                 navHostController = navHostController,
                 snackBarHostState = snackBarHostState
             )

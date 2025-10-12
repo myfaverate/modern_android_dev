@@ -32,4 +32,6 @@ internal sealed class Routes {
     internal object MediaCodec
     @Serializable
     internal object HelloCrop
+    @Serializable
+    internal object JNIScreen
 }
