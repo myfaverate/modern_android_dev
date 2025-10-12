@@ -17,6 +17,8 @@ import androidx.core.content.IntentCompat
 import io.github.imagecrop.bean.CropArgs
 import io.github.imagecrop.ui.screen.CropScreen
 import io.github.imagecrop.ui.theme.ImageCropTheme
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadPoolExecutor
 
 private const val TAG: String = "CropActivity"
 private const val CROP_ARGS_KEY: String = "cropArgsKey"
