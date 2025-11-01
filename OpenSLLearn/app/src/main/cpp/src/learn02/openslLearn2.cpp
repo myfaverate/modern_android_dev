@@ -1,4 +1,5 @@
 #include "openslLearn2.hpp"
+#include "NDKCamera.hpp"
 
 const char* const TAG = "openslLearn2";
 
@@ -329,3 +330,30 @@ Java_io_github_opensllearn_utils_Utils_audioRelease(JNIEnv*, jobject, jlong ptr)
     delete player;
 }
 
+
+
+
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_io_github_opensllearn_utils_Utils_initCamera(JNIEnv *env, jobject, jint width, jint height, jstring pcmPath) {
+    NDKCamera *ndkCamera = nullptr;
+    try {
+        jboolean isCopy = false;
+        const char * const pcmPathStr = env->GetStringUTFChars(pcmPath, &isCopy);
+        ndkCamera = new NDKCamera(width, height, pcmPathStr);
+        if (isCopy){
+            env->ReleaseStringUTFChars(pcmPath, pcmPathStr);
+        }
+    } catch (const std::exception &e) {
+        delete ndkCamera;
+        ndkCamera = nullptr;
+        env->ThrowNew(env->FindClass("java/lang/RuntimeException"), e.what());
+    }
+    return reinterpret_cast<jlong>(ndkCamera);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_io_github_opensllearn_utils_Utils_releaseCamera(JNIEnv*, jobject, jlong ptr) {
+    const auto* const ndkKCamera = reinterpret_cast<NDKCamera*>(ptr);
+    delete ndkKCamera;
+}

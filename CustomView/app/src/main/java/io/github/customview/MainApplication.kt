@@ -1,8 +1,9 @@
 package io.github.customview
 
 import android.app.Application
-import android.content.Context
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 
 private const val TAG: String = "MainApplication"
 

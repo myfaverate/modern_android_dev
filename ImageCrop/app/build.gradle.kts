@@ -8,7 +8,9 @@ plugins {
 
 android {
     namespace = "io.github.imagecrop"
-    compileSdk = 36
+    compileSdk {
+        version = release(36)
+    }
 
     defaultConfig {
         applicationId = "io.github.imagecrop"

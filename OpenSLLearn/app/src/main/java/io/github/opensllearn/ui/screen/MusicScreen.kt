@@ -62,7 +62,6 @@ internal fun MusicScreen(
     snackBarHostState: SnackbarHostState
 ) {
     val context: Context = LocalContext.current
-    val coroutineScope: CoroutineScope = rememberCoroutineScope()
     var ptr: Long by remember {
         mutableLongStateOf(value = 0)
     }
@@ -72,21 +71,12 @@ internal fun MusicScreen(
         Text(text = "创建录音22对象", modifier = Modifier
             .background(color = Color.Red)
             .padding(all = 5.dp)
-            .clickable {
-                // ParcelFileDescriptor.open(File(context.cacheDir, "output.pcm").apply { createNewFile() }, ParcelFileDescriptor.MODE_WRITE_ONLY).use { fd ->
-                //     ptr = Utils.audioStart(fd.fd)
-                // }
-                coroutineScope.launch {
-                    try {
-                        Trace.beginSection("click")
-                        Log.i(TAG, "MusicScreen -> click: ${Utils.hello1()}")
-                    }finally {
-                        Trace.endSection()
-                    }
-                }
+            .clickable { // ffplay -f rawvideo -pixel_format yuv420p -video_size 640x480 yuv.yuv
+                val yuvFile = File(context.cacheDir, "yuv.yuv")
+                ptr = Utils.initCamera(640, 480, yuvFile.absolutePath)
             })
         Text(text = "销毁录音对象", modifier = Modifier.clickable {
-            // Utils.audioRelease(ptr)
+            Utils.releaseCamera(ptr)
         })
     }
 }
@@ -100,3 +90,6 @@ private fun MusicScreenPreview() {
         MusicScreen(navHostController = navHostController, snackBarHostState = snackBarHostState)
     }
 }
+/*
+https://keeplooking.top/2023/08/12/Android/compose_inspector/
+ */

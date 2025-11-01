@@ -29,4 +29,7 @@ internal object Utils {
 
     external fun audioStart(fd: Int): Long
     external fun audioRelease(ptr: Long)
+
+    external fun initCamera(width: Int, height: Int, pcmPath: String): Long
+    external fun releaseCamera(ptr: Long)
 }

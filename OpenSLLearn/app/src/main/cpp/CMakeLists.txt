@@ -76,4 +76,6 @@ target_link_libraries(${LIBRARY_NAME2}
         log
         aaudio
         oboe::oboe
+        camera2ndk
+        mediandk
 )
