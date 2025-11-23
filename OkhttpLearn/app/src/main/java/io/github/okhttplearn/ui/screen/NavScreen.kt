@@ -72,15 +72,15 @@ internal fun NavScreen(
         entryProvider = { key ->
             when (key) {
                 is Routes.Greeting -> NavEntry(key = key) {
-                    Log.i(TAG, "NavScreen Greeting -> $key")
+                    Log.i(TAG, "NavScreen Greeting NavEntry -> $key")
                     Greeting(message = key.message, modifier = modifier, snackBarHostState = snackBarHostState){
-                        backStack.add(element = Routes.Home)
+                        backStack.add(element = Routes.World)
                     }
                 }
                 is Routes.Home -> NavEntry(key = key, contentKey = "Home") {
                     Log.i(TAG, "NavScreen Home -> $key")
                     HomeScreen(modifier = modifier, snackBarHostState = snackBarHostState){
-                        backStack.add(element = Routes.Detail(person = Person(name = "zsh")))
+                        backStack.add(element = Routes.Detail(person = Person(name = "zsh", description = "毕业于北京大学")))
                     }
                 }
                 is Routes.Detail -> NavEntry(key = key){
@@ -91,6 +91,14 @@ internal fun NavScreen(
                         }
                     )
                     DetailScreen(person = key.person, modifier = modifier, snackBarHostState = snackBarHostState, detailViewModel = detailViewModel)
+                }
+                is Routes.World -> NavEntry(key = key){
+                    Log.i(TAG, "WorldScreen -> $key")
+                    WorldScreen(modifier = modifier, snackBarHostState = snackBarHostState)
+                }
+                is Routes.Player -> NavEntry(key = key){
+                    Log.i(TAG, "PlayerScreen -> $key")
+                    PlayerScreen(modifier = modifier, snackBarHostState = snackBarHostState)
                 }
                 else -> {
                     error("Unknown route: $key")

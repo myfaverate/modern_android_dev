@@ -260,7 +260,7 @@ NDKCamera::NDKCamera(int width, int height, std::string yuvPath) : mWidth(width)
 #else
     status = ACameraCaptureSession_setRepeatingRequest(session, &captureCallbacks, 1, &request, nullptr);
     if (status != ACAMERA_OK){
-        logger::error(TAG, "开启 ACameraCaptureSession_setRepeatingRequest 失败");
+        logger::error(TAG, "开启 ACamferaCaptureSession_setRepeatingRequest 失败");
         return;
     }
 #endif

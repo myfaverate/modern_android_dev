@@ -1,4 +1,9 @@
+@file:Suppress("UnstableApiUsage")
+
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.io.FileInputStream
+import java.util.Properties
+import kotlin.apply
 
 plugins {
     alias(libs.plugins.android.application)
@@ -8,6 +13,9 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.serialization)
 }
+
+val keyStorePropertiesFile: File = rootProject.file("keystore.properties")
+val keyStoreProperties = Properties().apply { FileInputStream(keyStorePropertiesFile).use { load(it) } }
 
 android {
     namespace = "io.github.okhttplearn"
@@ -23,11 +31,30 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags  += "-std=c++23"
+                arguments += "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384"
+            }
+        }
+    }
+
+    signingConfigs {
+        create("release"){
+            keyAlias = keyStoreProperties["keyAlias"] as String
+            keyPassword = keyStoreProperties["keyPassword"] as String
+            storeFile = file(keyStoreProperties["storeFile"] as String).apply { logger.lifecycle("storeFile: $this") }
+            storePassword = keyStoreProperties["storePassword"] as String
+            enableV4Signing = true
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isShrinkResources = true
+            isDebuggable = false
+            isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -44,6 +71,12 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+    }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 }
 
@@ -75,6 +108,15 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     // converter-kotlinx-serialization
     implementation("com.squareup.retrofit2:converter-kotlinx-serialization:3.0.0")
+
+    // exoplayer
+
+    // ijkplayer
+    implementation("tv.danmaku.ijk.media:ijkplayer-java:0.8.8")
+    implementation("tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.8") // arm32
+    implementation("tv.danmaku.ijk.media:ijkplayer-arm64:0.8.8")
+    implementation("tv.danmaku.ijk.media:ijkplayer-x86:0.8.8")
+    implementation("tv.danmaku.ijk.media:ijkplayer-x86_64:0.8.8")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

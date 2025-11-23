@@ -11,4 +11,8 @@ internal sealed class Routes : NavKey {
     internal data class Detail(internal val person: Person) : Routes()
     @Serializable
     internal object Home : Routes()
+    @Serializable
+    internal object World : Routes()
+    @Serializable
+    internal object Player : Routes()
 }

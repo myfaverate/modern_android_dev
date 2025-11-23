@@ -7,6 +7,8 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -33,16 +35,19 @@ internal class MainActivity internal constructor(): ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         Log.i(TAG, "onCreate...")
         enableEdgeToEdge()
         setContent {
+            Log.i(TAG, "onCreate setContent ...")
             OkhttpLearnTheme {
+                Log.i(TAG, "onCreate OkhttpLearnTheme ...")
                 val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
-
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
                 ) { innerPadding: PaddingValues ->
+                    Log.i(TAG, "onCreate Scaffold ...")
                     NavScreen(
                         modifier = Modifier.padding(paddingValues = innerPadding),
                         snackBarHostState = snackBarHostState
