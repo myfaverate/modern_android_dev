@@ -4,6 +4,8 @@ import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.MediaPlayer
+import android.util.Log
+import okhttp3.internal.closeQuietly
 import okio.BufferedSink
 import okio.BufferedSource
 import okio.buffer
@@ -16,6 +18,8 @@ import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
 import java.util.zip.GZIPOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import kotlin.jvm.Throws
 
 private const val TAG: String = "Utils"
@@ -63,6 +67,33 @@ internal object Utils {
             }
             val md5Bytes: ByteArray = digest.digest()
             return md5Bytes.joinToString(separator = "") { "%02x".format(it) }
+        }
+    }
+
+    internal fun unzip(zipFile: File, targetDir: File){
+        if (!targetDir.isDirectory) {
+            throw RuntimeException("目标目录不能是文件")
+        }
+        ZipFile(zipFile).use { zipFile: ZipFile ->
+            zipFile.entries().asSequence()
+                .forEach { entry: ZipEntry ->
+                    val entryFile = File(targetDir, entry.name)
+                    if (entry.isDirectory){
+                        val isSuccess: Boolean = entryFile.mkdirs()
+                        Log.i(TAG, "unzip -> 目录是否创建成功: $isSuccess")
+                    } else {
+                        val parentFile: File? = entryFile.parentFile
+                        if (parentFile?.exists() == false){
+                            val isSuccess: Boolean = parentFile.mkdirs()
+                            Log.i(TAG, "unzip -> 父目录创建是否成功: $isSuccess")
+                        }
+                        zipFile.getInputStream(entry).source().buffer().use { bufferedSource: BufferedSource ->
+                            entryFile.sink().buffer().use { bufferedSink: BufferedSink ->
+                                bufferedSink.writeAll(source = bufferedSource)
+                            }
+                        }
+                    }
+                }
         }
     }
 
